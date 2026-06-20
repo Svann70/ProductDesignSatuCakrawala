@@ -1,0 +1,4 @@
+*.md
+
+!CLAUDE.md
+!README.md

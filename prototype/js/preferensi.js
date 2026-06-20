@@ -1,0 +1,354 @@
+/* ============================================
+   Preferensi Dosen Page - 45min/SKS with Individual Slots
+   ============================================ */
+
+const Preferensi = {
+  render(container) {
+    const dosenList = DataStore.dosen.filter(d => d.status === 'Aktif');
+    const prefMap = {};
+    DataStore.preferensi.forEach(p => { prefMap[p.dosen_id] = p; });
+
+    const conflicts = DataStore.checkPreferenceConflicts();
+
+    container.innerHTML = `
+      <div class="page-content-inner">
+        ${conflicts.length > 0 ? this.renderConflictBanner(conflicts) : ''}
+
+        <div class="card" style="margin-bottom: var(--space-4)">
+          <div class="card-header">
+            <h3>Peta Preferensi Dosen (per SKS = 45 menit)</h3>
+            <span class="badge badge-info">${DataStore.semester[0].tahun_ajaran} ${DataStore.semester[0].jenis}</span>
+          </div>
+          <div class="card-body">
+            <div style="font-size: var(--text-sm); color: var(--color-ink-muted); margin-bottom: var(--space-3)">
+              Setiap kotak = 1 SKS (45 menit). Istirahat 15 menit antar slot. Warna = dosen. Merah = konflik ("war") antar dosen.
+            </div>
+            ${this.renderPreferenceGrid(prefMap, conflicts)}
+          </div>
+        </div>
+
+        <div class="card" style="max-width: 720px">
+          <div class="card-header">
+            <h3>Daftar Preferensi Dosen</h3>
+          </div>
+          <div class="card-body">
+            <p style="font-size: var(--text-sm); color: var(--color-ink-muted); margin-bottom: var(--space-4)">
+              Klik dosen untuk mengelola preferensi jadwal mengajar. 1 SKS = 45 menit.
+            </p>
+            <div style="display: flex; flex-direction: column; gap: var(--space-3)">
+              ${dosenList.map(d => {
+                const pref = prefMap[d.id];
+                const jur = DataStore.getJurusan(d.jurusan_id);
+                const color = DataStore.getJurusanColor(d.jurusan_id);
+                const isConflict = pref && this.hasDosenConflict(d.id, conflicts);
+                const totalSKS = pref ? pref.details.length : 0;
+                return `
+                  <div style="display: flex; align-items: center; justify-content: space-between; padding: var(--space-3) var(--space-4); border: 1px solid ${isConflict ? 'var(--color-error)' : 'var(--color-border)'}; border-radius: var(--radius-md); background: ${isConflict ? 'var(--color-error-bg)' : 'var(--color-canvas)'}">
+                    <div style="display: flex; align-items: center; gap: var(--space-3)">
+                      <div style="width: 8px; height: 8px; border-radius: 2px; background: ${color}"></div>
+                      <div>
+                        <div style="font-weight: var(--weight-semibold); font-size: var(--text-base)">${d.nama}</div>
+                        <div style="font-size: var(--text-sm); color: var(--color-ink-muted)">${jur?.kode || ''} ${totalSKS > 0 ? `(${totalSKS} SKS/minggu)` : ''}</div>
+                      </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: var(--space-3)">
+                      ${isConflict ? '<span class="badge badge-error">Ada Konflik</span>' : ''}
+                      ${pref
+                        ? `<span class="badge badge-success">Sudah Mengisi</span>
+                           <button class="btn btn-secondary btn-sm" onclick="Preferensi.openEdit(${d.id})">Edit</button>`
+                        : `<span class="badge badge-warning">Belum Mengisi</span>
+                           <button class="btn btn-primary btn-sm" onclick="Preferensi.openEdit(${d.id})">Isi Preferensi</button>`
+                      }
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  },
+
+  hasDosenConflict(dosenId, conflicts) {
+    return conflicts.some(c => c.dosen_ids.includes(dosenId));
+  },
+
+  renderConflictBanner(conflicts) {
+    return `
+      <div class="pref-conflict-banner">
+        <span class="pref-conflict-icon">!</span>
+        <div style="flex: 1">
+          <div class="pref-conflict-title">Konflik Preferensi Terdeteksi (${conflicts.length})</div>
+          <div style="font-size: var(--text-sm); color: var(--color-ink-muted); margin-bottom: var(--space-2)">
+            Dosen berikut menginginkan slot waktu yang sama. Staf akademik perlu menyelesaikan konflik ini.
+          </div>
+          <div class="pref-conflict-list">
+            ${conflicts.map(c => `
+              <div class="pref-conflict-item">
+                <span class="pref-conflict-slot">${c.hari} ${c.jam_mulai}-${c.jam_selesai}</span>
+                <span style="color: var(--color-ink-muted); font-size: var(--text-sm)">diminta oleh:</span>
+                <span class="pref-conflict-dosen">
+                  ${c.dosen_list.map(d => {
+                    const color = DataStore.getJurusanColor(d.jurusan_id);
+                    return `<span class="pref-conflict-badge" style="background: ${color}">${d.nama.split(',')[0]}</span>`;
+                  }).join('')}
+                </span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+    `;
+  },
+
+  renderPreferenceGrid(prefMap, conflicts) {
+    const prefSlots = DataStore.getPreferenceSlots();
+
+    // Build grid data: slot -> day -> [dosen]
+    const gridData = {};
+    prefSlots.forEach(slot => {
+      gridData[slot.label] = {};
+      DataStore.hari.forEach(hari => {
+        gridData[slot.label][hari] = [];
+      });
+    });
+
+    DataStore.preferensi.forEach(p => {
+      const dosen = DataStore.getDosen(p.dosen_id);
+      if (!dosen) return;
+      p.details.forEach(d => {
+        const slotKey = `${d.jam_mulai} - ${d.jam_selesai}`;
+        if (gridData[slotKey] && gridData[slotKey][d.hari]) {
+          gridData[slotKey][d.hari].push(dosen);
+        }
+      });
+    });
+
+    // Build conflict set
+    const conflictSet = new Set();
+    conflicts.forEach(c => {
+      const slotKey = `${c.jam_mulai} - ${c.jam_selesai}`;
+      conflictSet.add(`${slotKey}-${c.hari}`);
+    });
+
+    // Group slots by session (morning/afternoon)
+    const morningSlots = prefSlots.filter(s => s.start < '12:00');
+    const afternoonSlots = prefSlots.filter(s => s.start >= '13:00');
+
+    const renderSlotGroup = (slots, groupLabel) => `
+      <div style="font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--color-ink-muted); padding: var(--space-1) var(--space-2); background: var(--color-surface-2); grid-column: 1 / -1; text-transform: uppercase; letter-spacing: 0.05em">${groupLabel}</div>
+      ${slots.map(slot => `
+        <div class="pref-grid-time">${slot.label}</div>
+        ${DataStore.hari.map(hari => {
+          const dosenList = gridData[slot.label][hari] || [];
+          const cellKey = `${slot.label}-${hari}`;
+          const isConflict = conflictSet.has(cellKey);
+          return `
+            <div class="pref-grid-cell ${isConflict ? 'pref-war-cell' : ''}">
+              ${dosenList.map(d => {
+                const color = DataStore.getJurusanColor(d.jurusan_id);
+                return `<span class="pref-dosen-pill" style="background: ${color}" title="${d.nama}">${d.nama.split(',')[0].split(' ').pop()}</span>`;
+              }).join('')}
+            </div>
+          `;
+        }).join('')}
+      `).join('')}
+    `;
+
+    return `
+      <div class="pref-grid" style="grid-template-columns: 70px repeat(6, 1fr)">
+        <div class="pref-grid-header" style="background: var(--color-surface-1)">Jam</div>
+        ${DataStore.hari.map(h => `<div class="pref-grid-header">${h}</div>`).join('')}
+        ${renderSlotGroup(morningSlots, 'Sesi Pagi')}
+        ${renderSlotGroup(afternoonSlots, 'Sesi Siang')}
+      </div>
+    `;
+  },
+
+  openEdit(dosenId) {
+    const dosen = DataStore.getDosen(dosenId);
+    const pref = DataStore.preferensi.find(p => p.dosen_id === dosenId);
+    const jur = DataStore.getJurusan(dosen.jurusan_id);
+
+    let modal = document.getElementById('prefModal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'prefModal';
+      modal.className = 'modal-overlay';
+      document.body.appendChild(modal);
+    }
+
+    // Build day slot data
+    const daySlotData = {};
+    DataStore.hari.forEach(h => { daySlotData[h] = {}; });
+    if (pref) {
+      pref.details.forEach(d => {
+        if (daySlotData[d.hari]) {
+          const key = `${d.jam_mulai}-${d.jam_selesai}`;
+          daySlotData[d.hari][key] = true;
+        }
+      });
+    }
+
+    const prefSlots = DataStore.getPreferenceSlots();
+    const morningSlots = prefSlots.filter(s => s.start < '12:00');
+    const afternoonSlots = prefSlots.filter(s => s.start >= '13:00');
+
+    modal.innerHTML = `
+      <div class="modal modal-wide">
+        <div class="modal-header">
+          <h3>Preferensi Jadwal Mengajar</h3>
+          <button class="modal-close" onclick="App.closeModal('prefModal')">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div style="margin-bottom: var(--space-4)">
+            <div style="font-weight: var(--weight-semibold); font-size: var(--text-lg)">${dosen.nama}</div>
+            <div style="font-size: var(--text-sm); color: var(--color-ink-muted)">Jurusan: ${jur?.nama || '-'} | 1 SKS = 45 menit, istirahat 15 menit</div>
+          </div>
+          <div style="margin-bottom: var(--space-3)">
+            <div style="font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--color-ink); margin-bottom: var(--space-2)">
+              Centang slot waktu yang dikehendaki (per SKS):
+            </div>
+          </div>
+
+          <div style="overflow-x: auto">
+            <table style="width: 100%; border-collapse: collapse; font-size: var(--text-sm)">
+              <thead>
+                <tr style="background: var(--color-surface-1)">
+                  <th style="padding: var(--space-2) var(--space-3); text-align: left; font-weight: var(--weight-semibold); border-bottom: 1px solid var(--color-border); min-width: 100px">Slot</th>
+                  ${DataStore.hari.map(h => `<th style="padding: var(--space-2); text-align: center; font-weight: var(--weight-semibold); border-bottom: 1px solid var(--color-border)">${h}</th>`).join('')}
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td colspan="7" style="padding: var(--space-1) var(--space-2); font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--color-ink-subdued); background: var(--color-surface-2); text-transform: uppercase; letter-spacing: 0.05em">Sesi Pagi</td></tr>
+                ${morningSlots.map(slot => `
+                  <tr>
+                    <td style="padding: var(--space-2) var(--space-3); font-family: var(--font-mono); font-size: var(--text-xs); color: var(--color-ink-muted); border-bottom: 1px solid var(--color-border-subtle)">${slot.label}</td>
+                    ${DataStore.hari.map(hari => {
+                      const slotKey = `${slot.start}-${slot.end}`;
+                      const isChecked = daySlotData[hari][slotKey] || false;
+                      return `
+                        <td style="padding: var(--space-2); text-align: center; border-bottom: 1px solid var(--color-border-subtle)">
+                          <input type="checkbox" class="pref-slot-check" data-hari="${hari}" data-start="${slot.start}" data-end="${slot.end}" ${isChecked ? 'checked' : ''} style="width: 16px; height: 16px; accent-color: var(--color-primary); cursor: pointer">
+                        </td>
+                      `;
+                    }).join('')}
+                  </tr>
+                `).join('')}
+                <tr><td colspan="7" style="padding: var(--space-1) var(--space-2); font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--color-ink-subdued); background: var(--color-surface-2); text-transform: uppercase; letter-spacing: 0.05em">Sesi Siang</td></tr>
+                ${afternoonSlots.map(slot => `
+                  <tr>
+                    <td style="padding: var(--space-2) var(--space-3); font-family: var(--font-mono); font-size: var(--text-xs); color: var(--color-ink-muted); border-bottom: 1px solid var(--color-border-subtle)">${slot.label}</td>
+                    ${DataStore.hari.map(hari => {
+                      const slotKey = `${slot.start}-${slot.end}`;
+                      const isChecked = daySlotData[hari][slotKey] || false;
+                      return `
+                        <td style="padding: var(--space-2); text-align: center; border-bottom: 1px solid var(--color-border-subtle)">
+                          <input type="checkbox" class="pref-slot-check" data-hari="${hari}" data-start="${slot.start}" data-end="${slot.end}" ${isChecked ? 'checked' : ''} style="width: 16px; height: 16px; accent-color: var(--color-primary); cursor: pointer">
+                        </td>
+                      `;
+                    }).join('')}
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+
+          <div id="prefSummary" style="margin-top: var(--space-3)"></div>
+        </div>
+        <div class="pref-status-bar">
+          <span>Status: <strong>${pref ? 'Sudah Diisi' : 'Belum Diisi'}</strong></span>
+          <span id="prefSKSCount" style="margin-left: var(--space-3); font-size: var(--text-sm)"></span>
+          <span style="margin-left: auto; font-size: var(--text-xs); color: var(--color-ink-subdued)">Dapat diubah sebelum jadwal difinalisasi</span>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" onclick="App.closeModal('prefModal')">Batal</button>
+          <button class="btn btn-primary" onclick="Preferensi.savePref(${dosenId})">Simpan Preferensi</button>
+        </div>
+      </div>
+    `;
+
+    App.openModal('prefModal');
+    this.updatePrefSummary();
+
+    // Bind checkbox change events for live summary
+    modal.querySelectorAll('.pref-slot-check').forEach(cb => {
+      cb.addEventListener('change', () => this.updatePrefSummary());
+    });
+  },
+
+  updatePrefSummary() {
+    const checked = document.querySelectorAll('.pref-slot-check:checked');
+    const summaryEl = document.getElementById('prefSummary');
+    const countEl = document.getElementById('prefSKSCount');
+
+    if (countEl) countEl.textContent = `${checked.length} SKS dipilih`;
+
+    if (!summaryEl) return;
+
+    if (checked.length === 0) {
+      summaryEl.innerHTML = '';
+      return;
+    }
+
+    // Group by day
+    const byDay = {};
+    checked.forEach(cb => {
+      const hari = cb.dataset.hari;
+      if (!byDay[hari]) byDay[hari] = [];
+      byDay[hari].push(`${cb.dataset.start}-${cb.dataset.end}`);
+    });
+
+    summaryEl.innerHTML = `
+      <div style="padding: var(--space-2) var(--space-3); background: var(--color-primary-subtle); border-radius: var(--radius-md); font-size: var(--text-sm)">
+        <strong>Ringkasan:</strong>
+        ${Object.entries(byDay).map(([hari, slots]) =>
+          ` ${hari} (${slots.length} SKS)`
+        ).join(', ')}
+        - Total <strong>${checked.length} SKS</strong> per minggu
+      </div>
+    `;
+  },
+
+  savePref(dosenId) {
+    const checked = document.querySelectorAll('.pref-slot-check:checked');
+    const details = [];
+
+    checked.forEach(cb => {
+      details.push({
+        hari: cb.dataset.hari,
+        jam_mulai: cb.dataset.start,
+        jam_selesai: cb.dataset.end,
+      });
+    });
+
+    if (details.length === 0) {
+      App.toast('Pilih minimal satu slot waktu.', 'error');
+      return;
+    }
+
+    const existingIdx = DataStore.preferensi.findIndex(p => p.dosen_id === dosenId);
+    const semId = DataStore.semester[0].id;
+    if (existingIdx >= 0) {
+      DataStore.preferensi[existingIdx].details = details;
+    } else {
+      DataStore.preferensi.push({ id: DataStore.preferensi.length + 1, dosen_id: dosenId, semester_id: semId, details });
+    }
+
+    DataStore.auditLog.push({
+      id: DataStore.auditLog.length + 1,
+      entitas: 'Preferensi Dosen',
+      entitas_id: dosenId,
+      aksi: existingIdx >= 0 ? 'Update' : 'Create',
+      perubahan: { field: 'preferensi', nilai_lama: null, nilai_baru: details.map(d => `${d.hari} ${d.jam_mulai}-${d.jam_selesai}`).join(', ') },
+      user: DataStore.getDosen(dosenId)?.nama || 'Unknown',
+      timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
+    });
+
+    App.closeModal('prefModal');
+    App.toast(`Preferensi berhasil disimpan (${details.length} SKS).`);
+    const content = document.getElementById('pageContent');
+    if (content) this.render(content);
+  },
+};
