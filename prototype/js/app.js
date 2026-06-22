@@ -112,7 +112,7 @@ function formatTime(t) { return t; }
 function getStatusBadge(status) {
   const map = {
     'Draft': 'badge-info',
-    'Difinalisasi': 'badge-success',
+    'Aktif': 'badge-success',
     'Berhasil': 'badge-success',
     'Gagal': 'badge-error',
     'Menunggu': 'badge-warning',

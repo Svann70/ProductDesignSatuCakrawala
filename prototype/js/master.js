@@ -80,7 +80,7 @@ const Master = {
                 <span class="master-card-tag">${jadwalCount} jadwal</span>
               </div>
               <div class="master-card-actions">
-                <button class="btn btn-ghost btn-sm" onclick="App.toast('Fitur edit akan datang')">Edit</button>
+                <button class="btn btn-ghost btn-sm" onclick="Master.openEditModal('jurusan', ${j.id})">Edit</button>
                 <button class="btn btn-ghost btn-sm" style="color: var(--color-error)" onclick="App.toast('Tidak dapat menghapus: data digunakan oleh jadwal', 'error')">Hapus</button>
               </div>
             </div>
@@ -130,7 +130,7 @@ const Master = {
                 <span class="master-card-tag">${jadwalCount} jadwal</span>
               </div>
               <div class="master-card-actions">
-                <button class="btn btn-ghost btn-sm" onclick="App.toast('Fitur edit akan datang')">Edit</button>
+                <button class="btn btn-ghost btn-sm" onclick="Master.openEditModal('matakuliah', ${m.id})">Edit</button>
                 <button class="btn btn-ghost btn-sm" style="color: var(--color-error)" onclick="App.toast('Tidak dapat menghapus: data digunakan oleh jadwal', 'error')">Hapus</button>
               </div>
             </div>
@@ -166,7 +166,7 @@ const Master = {
               <span class="master-card-tag">${jadwalCount} jadwal</span>
             </div>
             <div class="master-card-actions">
-              <button class="btn btn-ghost btn-sm" onclick="App.toast('Fitur edit akan datang')">Edit</button>
+              <button class="btn btn-ghost btn-sm" onclick="Master.openEditModal('matakuliah', ${m.id})">Edit</button>
               <button class="btn btn-ghost btn-sm" style="color: var(--color-error)" onclick="App.toast('Tidak dapat menghapus: data digunakan oleh jadwal', 'error')">Hapus</button>
             </div>
           </div>
@@ -212,7 +212,7 @@ const Master = {
                     </span>
                   </td>
                   <td class="table-actions">
-                    <button class="btn btn-ghost btn-sm" onclick="App.toast('Fitur edit akan datang')">Edit</button>
+                    <button class="btn btn-ghost btn-sm" onclick="Master.openEditModal('mahasiswa', ${m.id})">Edit</button>
                     <button class="btn btn-ghost btn-sm" style="color: var(--color-error)" onclick="App.toast('Tidak dapat menghapus: data digunakan oleh grouping', 'error')">Hapus</button>
                   </td>
                 </tr>
@@ -249,7 +249,7 @@ const Master = {
                 </span>
               </td>
               <td class="table-actions">
-                <button class="btn btn-ghost btn-sm" onclick="App.toast('Fitur edit akan datang')">Edit</button>
+                <button class="btn btn-ghost btn-sm" onclick="Master.openEditModal('mahasiswa', ${m.id})">Edit</button>
                 <button class="btn btn-ghost btn-sm" style="color: var(--color-error)" onclick="App.toast('Tidak dapat menghapus: data digunakan oleh grouping', 'error')">Hapus</button>
               </td>
             </tr>
@@ -286,7 +286,7 @@ const Master = {
                   <td>${jur?.kode || '-'}</td>
                   <td>${getStatusBadge(d.status)}</td>
                   <td class="table-actions">
-                    <button class="btn btn-ghost btn-sm" onclick="App.toast('Fitur edit akan datang')">Edit</button>
+                    <button class="btn btn-ghost btn-sm" onclick="Master.openEditModal('dosen', ${d.id})">Edit</button>
                     <button class="btn btn-ghost btn-sm" style="color: var(--color-error)" onclick="App.toast('Tidak dapat menghapus: data digunakan oleh jadwal', 'error')">Hapus</button>
                   </td>
                 </tr>
@@ -330,7 +330,7 @@ const Master = {
                   <td style="font-size: var(--text-sm); color: var(--color-ink-muted)">${r.fasilitas || '-'}</td>
                   <td>${r.is_active ? getStatusBadge('Aktif') : '<span class="badge badge-neutral">Non-Aktif</span>'}</td>
                   <td class="table-actions">
-                    <button class="btn btn-ghost btn-sm" onclick="App.toast('Fitur edit akan datang')">Edit</button>
+                    <button class="btn btn-ghost btn-sm" onclick="Master.openEditModal('ruangan', ${r.id})">Edit</button>
                     <button class="btn btn-ghost btn-sm" style="color: var(--color-error)" onclick="App.toast('Tidak dapat menghapus: data digunakan oleh jadwal', 'error')">Hapus</button>
                   </td>
                 </tr>
@@ -372,5 +372,195 @@ const Master = {
         </table>
       </div>
     `;
+  },
+
+  // ---- EDIT METHODS ----
+  openEditModal(type, id) {
+    let item, title, fields;
+    switch (type) {
+      case 'jurusan':
+        item = DataStore.jurusan.find(j => j.id === id);
+        title = 'Edit Jurusan';
+        fields = [
+          { name: 'nama', label: 'Nama Jurusan', value: item?.nama || '', required: true },
+          { name: 'kode', label: 'Kode', value: item?.kode || '', required: true },
+          { name: 'fakultas', label: 'Fakultas', value: item?.fakultas || '', required: true },
+        ];
+        break;
+      case 'dosen':
+        item = DataStore.dosen.find(d => d.id === id);
+        title = 'Edit Dosen';
+        fields = [
+          { name: 'nama', label: 'Nama', value: item?.nama || '', required: true },
+          { name: 'nip', label: 'NIP', value: item?.nip || '', required: true },
+          { name: 'jurusan_id', label: 'Jurusan', value: item?.jurusan_id || '', type: 'select', options: DataStore.jurusan.map(j => ({ value: j.id, label: j.nama })), required: true },
+          { name: 'status', label: 'Status', value: item?.status || 'Aktif', type: 'select', options: [{ value: 'Aktif', label: 'Aktif' }, { value: 'Non-Aktif', label: 'Non-Aktif' }, { value: 'Cuti', label: 'Cuti' }] },
+        ];
+        break;
+      case 'ruangan':
+        item = DataStore.ruangan.find(r => r.id === id);
+        title = 'Edit Ruangan';
+        fields = [
+          { name: 'nama', label: 'Nama Ruangan', value: item?.nama || '', required: true },
+          { name: 'gedung_id', label: 'Gedung', value: item?.gedung_id || '', type: 'select', options: DataStore.gedung.map(g => ({ value: g.id, label: g.nama })), required: true },
+          { name: 'kapasitas', label: 'Kapasitas', value: item?.kapasitas || '', type: 'number', required: true },
+          { name: 'fasilitas', label: 'Fasilitas', value: item?.fasilitas || '' },
+        ];
+        break;
+      case 'matakuliah':
+        item = DataStore.mataKuliah.find(m => m.id === id);
+        title = 'Edit Mata Kuliah';
+        fields = [
+          { name: 'nama', label: 'Nama Mata Kuliah', value: item?.nama || '', required: true },
+          { name: 'kode', label: 'Kode', value: item?.kode || '', required: true },
+          { name: 'sks', label: 'SKS', value: item?.sks || '', type: 'number', required: true },
+          { name: 'jurusan_id', label: 'Jurusan', value: item?.jurusan_id || '', type: 'select', options: DataStore.jurusan.map(j => ({ value: j.id, label: j.nama })), required: true },
+          { name: 'semester', label: 'Semester', value: item?.semester || '', type: 'select', options: [1,2,3,4,5,6,7,8].map(s => ({ value: s, label: `Semester ${s}` })), required: true },
+        ];
+        break;
+      case 'mahasiswa':
+        item = DataStore.mahasiswa.find(m => m.id === id);
+        title = 'Edit Mahasiswa';
+        fields = [
+          { name: 'nama', label: 'Nama', value: item?.nama || '', required: true },
+          { name: 'nim', label: 'NIM', value: item?.nim || '', required: true },
+          { name: 'jurusan_id', label: 'Jurusan', value: item?.jurusan_id || '', type: 'select', options: DataStore.jurusan.map(j => ({ value: j.id, label: j.nama })), required: true },
+        ];
+        break;
+      default:
+        App.toast('Tipe data tidak dikenali', 'error');
+        return;
+    }
+
+    if (!item) {
+      App.toast('Data tidak ditemukan', 'error');
+      return;
+    }
+
+    let modal = document.getElementById('masterEditModal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'masterEditModal';
+      modal.className = 'modal-overlay';
+      document.body.appendChild(modal);
+    }
+
+    modal.innerHTML = `
+      <div class="modal" style="max-width: 480px">
+        <div class="modal-header">
+          <h3>${title}</h3>
+          <button class="modal-close" onclick="App.closeModal('masterEditModal')">&times;</button>
+        </div>
+        <div class="modal-body">
+          ${fields.map(f => {
+            if (f.type === 'select') {
+              return `
+                <div class="form-group">
+                  <label class="form-label">${f.label} ${f.required ? '<span class="required">*</span>' : ''}</label>
+                  <select class="form-select" id="edit_${f.name}">
+                    <option value="">Pilih ${f.label}</option>
+                    ${f.options.map(o => `<option value="${o.value}" ${f.value == o.value ? 'selected' : ''}>${o.label}</option>`).join('')}
+                  </select>
+                </div>
+              `;
+            }
+            return `
+              <div class="form-group">
+                <label class="form-label">${f.label} ${f.required ? '<span class="required">*</span>' : ''}</label>
+                <input type="${f.type || 'text'}" class="form-input" id="edit_${f.name}" value="${f.value}">
+              </div>
+            `;
+          }).join('')}
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" onclick="App.closeModal('masterEditModal')">Batal</button>
+          <button class="btn btn-primary" onclick="Master.saveEdit('${type}', ${id})">Simpan</button>
+        </div>
+      </div>
+    `;
+
+    App.openModal('masterEditModal');
+  },
+
+  saveEdit(type, id) {
+    const getValue = (name) => {
+      const el = document.getElementById(`edit_${name}`);
+      return el ? el.value.trim() : '';
+    };
+
+    switch (type) {
+      case 'jurusan': {
+        const item = DataStore.jurusan.find(j => j.id === id);
+        if (!item) return;
+        const nama = getValue('nama');
+        const kode = getValue('kode');
+        const fakultas = getValue('fakultas');
+        if (!nama || !kode || !fakultas) { App.toast('Harap lengkapi semua field', 'error'); return; }
+        item.nama = nama;
+        item.kode = kode;
+        item.fakultas = fakultas;
+        break;
+      }
+      case 'dosen': {
+        const item = DataStore.dosen.find(d => d.id === id);
+        if (!item) return;
+        const nama = getValue('nama');
+        const nip = getValue('nip');
+        const jurusan_id = parseInt(getValue('jurusan_id'));
+        const status = getValue('status');
+        if (!nama || !nip || !jurusan_id) { App.toast('Harap lengkapi semua field', 'error'); return; }
+        item.nama = nama;
+        item.nip = nip;
+        item.jurusan_id = jurusan_id;
+        item.status = status || 'Aktif';
+        break;
+      }
+      case 'ruangan': {
+        const item = DataStore.ruangan.find(r => r.id === id);
+        if (!item) return;
+        const nama = getValue('nama');
+        const gedung_id = parseInt(getValue('gedung_id'));
+        const kapasitas = parseInt(getValue('kapasitas'));
+        const fasilitas = getValue('fasilitas');
+        if (!nama || !gedung_id || !kapasitas) { App.toast('Harap lengkapi semua field', 'error'); return; }
+        item.nama = nama;
+        item.gedung_id = gedung_id;
+        item.kapasitas = kapasitas;
+        item.fasilitas = fasilitas;
+        break;
+      }
+      case 'matakuliah': {
+        const item = DataStore.mataKuliah.find(m => m.id === id);
+        if (!item) return;
+        const nama = getValue('nama');
+        const kode = getValue('kode');
+        const sks = parseInt(getValue('sks'));
+        const jurusan_id = parseInt(getValue('jurusan_id'));
+        const semester = parseInt(getValue('semester'));
+        if (!nama || !kode || !sks || !jurusan_id || !semester) { App.toast('Harap lengkapi semua field', 'error'); return; }
+        item.nama = nama;
+        item.kode = kode;
+        item.sks = sks;
+        item.jurusan_id = jurusan_id;
+        item.semester = semester;
+        break;
+      }
+      case 'mahasiswa': {
+        const item = DataStore.mahasiswa.find(m => m.id === id);
+        if (!item) return;
+        const nama = getValue('nama');
+        const nim = getValue('nim');
+        const jurusan_id = parseInt(getValue('jurusan_id'));
+        if (!nama || !nim || !jurusan_id) { App.toast('Harap lengkapi semua field', 'error'); return; }
+        item.nama = nama;
+        item.nim = nim;
+        item.jurusan_id = jurusan_id;
+        break;
+      }
+    }
+
+    App.closeModal('masterEditModal');
+    App.toast('Data berhasil diperbarui.');
+    this.renderTab();
   },
 };

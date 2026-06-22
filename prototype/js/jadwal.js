@@ -3,9 +3,12 @@
    ============================================ */
 
 const Jadwal = {
-  filters: { search: '', jurusan: '', semester: '', gedung: '', hari: '' },
+  filters: { search: '', jurusan: '', semester: '', gedung: '', hari: '', ketersediaan: '' },
   viewMode: 'kalender', // kalender | ruangan | dosen | jurusan | hari
   editingId: null,
+  selectedWeek: 1,
+  currentMonth: new Date().getMonth(),
+  currentYear: new Date().getFullYear(),
 
   render(container) {
     this.container = container;
@@ -14,8 +17,65 @@ const Jadwal = {
 
   renderPage() {
     const filtered = this.getFiltered();
+    const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+    const monthName = months[this.currentMonth];
+    const now = new Date();
+    const isCurrentMonth = this.currentMonth === now.getMonth() && this.currentYear === now.getFullYear();
+    const currentWeek = isCurrentMonth ? Math.ceil(now.getDate() / 7) : 1;
+
+    // Week date ranges
+    const weeks = [
+      { num: 1, label: '1-7' },
+      { num: 2, label: '8-14' },
+      { num: 3, label: '15-21' },
+      { num: 4, label: '22-28' },
+      { num: 5, label: '29-31' },
+    ];
+
     this.container.innerHTML = `
       <div class="page-content-inner">
+        <!-- Month & Week Selector -->
+        <div style="margin-bottom: var(--space-4)">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-3)">
+            <div style="display: flex; align-items: center; gap: var(--space-2)">
+              <button class="btn btn-ghost btn-icon btn-sm" onclick="Jadwal.changeMonth(-1)" title="Bulan sebelumnya">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+              </button>
+              <div style="font-weight: var(--weight-semibold); font-size: var(--text-lg); min-width: 180px; text-align: center">${monthName} ${this.currentYear}</div>
+              <button class="btn btn-ghost btn-icon btn-sm" onclick="Jadwal.changeMonth(1)" title="Bulan berikutnya">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+              </button>
+              ${!isCurrentMonth ? '<button class="btn btn-ghost btn-sm" onclick="Jadwal.goToToday()" style="margin-left: var(--space-2)">Hari Ini</button>' : ''}
+            </div>
+          </div>
+          <!-- Week Cards -->
+          <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--space-2)">
+            ${weeks.map(w => {
+              const isActive = this.selectedWeek === w.num;
+              const isCurrent = isCurrentMonth && currentWeek === w.num;
+              const jadwalCount = this.getJadwalCountForWeek(w.num);
+              return `
+                <div onclick="Jadwal.selectWeek(${w.num})" style="
+                  padding: var(--space-2) var(--space-3);
+                  border: 1px solid ${isActive ? 'var(--color-primary)' : 'var(--color-border)'};
+                  border-radius: var(--radius-md);
+                  background: ${isActive ? 'var(--color-primary-subtle)' : 'var(--color-canvas)'};
+                  cursor: pointer;
+                  text-align: center;
+                  transition: all 0.15s;
+                  position: relative;
+                ">
+                  ${isCurrent ? '<div style="position: absolute; top: 4px; right: 6px; width: 6px; height: 6px; border-radius: 50%; background: var(--color-primary)"></div>' : ''}
+                  <div style="font-size: var(--text-xs); color: ${isActive ? 'var(--color-primary-deep)' : 'var(--color-ink-subdued)'}; font-weight: var(--weight-medium)">Minggu ${w.num}</div>
+                  <div style="font-size: var(--text-xs); color: var(--color-ink-subdued); font-family: var(--font-mono)">${w.label}</div>
+                  <div style="font-size: var(--text-xs); color: ${isActive ? 'var(--color-primary-deep)' : 'var(--color-ink-muted)'}; margin-top: 2px">${jadwalCount} jadwal</div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+
+        <!-- Toolbar -->
         <div class="jadwal-toolbar">
           <div class="toolbar-search">
             <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
@@ -34,18 +94,12 @@ const Jadwal = {
               <option value="">Semua Gedung</option>
               ${DataStore.gedung.map(g => `<option value="${g.id}" ${this.filters.gedung == g.id ? 'selected' : ''}>${g.nama}</option>`).join('')}
             </select>
-            <select class="filter-select" id="filterHari">
-              <option value="">Semua Hari</option>
-              ${DataStore.hari.map(h => `<option value="${h}" ${this.filters.hari === h ? 'selected' : ''}>${h}</option>`).join('')}
-            </select>
           </div>
           <div style="margin-left: auto; display: flex; gap: var(--space-2); align-items: center">
             <div class="view-toggle">
               <button class="view-toggle-btn ${this.viewMode === 'kalender' ? 'active' : ''}" data-view="kalender">Kalender</button>
               <button class="view-toggle-btn ${this.viewMode === 'ruangan' ? 'active' : ''}" data-view="ruangan">Ruangan</button>
               <button class="view-toggle-btn ${this.viewMode === 'dosen' ? 'active' : ''}" data-view="dosen">Dosen</button>
-              <button class="view-toggle-btn ${this.viewMode === 'jurusan' ? 'active' : ''}" data-view="jurusan">Jurusan</button>
-              <button class="view-toggle-btn ${this.viewMode === 'hari' ? 'active' : ''}" data-view="hari">Hari</button>
             </div>
             <button class="btn btn-primary" id="btnAddJadwal">+ Tambah Jadwal</button>
           </div>
@@ -76,10 +130,6 @@ const Jadwal = {
       this.filters.gedung = e.target.value;
       this.updateView();
     });
-    document.getElementById('filterHari').addEventListener('change', (e) => {
-      this.filters.hari = e.target.value;
-      this.updateView();
-    });
 
     document.querySelectorAll('.view-toggle-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -104,6 +154,32 @@ const Jadwal = {
   },
 
   getFiltered() {
+    // Build set of occupied room-time slots
+    const occupiedSlots = new Set(); // "ruanganId-hari-jamMulai-jamSelesai"
+    DataStore.jadwal.forEach(j => {
+      occupiedSlots.add(`${j.ruangan_id}-${j.hari}-${j.jam_mulai}-${j.jam_selesai}`);
+    });
+
+    // Build set of available rooms (rooms with at least 1 free slot in the week)
+    const availableRoomIds = new Set();
+    DataStore.ruangan.filter(r => r.is_active).forEach(r => {
+      const timeSlots = DataStore.getTimeSlots();
+      const hasFree = DataStore.hari.some(hari =>
+        timeSlots.some(slot => !occupiedSlots.has(`${r.id}-${hari}-${slot.start}-${slot.end}`))
+      );
+      if (hasFree) availableRoomIds.add(r.id);
+    });
+
+    // Build set of fully occupied rooms
+    const fullyOccupiedRoomIds = new Set();
+    DataStore.ruangan.filter(r => r.is_active).forEach(r => {
+      const timeSlots = DataStore.getTimeSlots();
+      const allOccupied = DataStore.hari.every(hari =>
+        timeSlots.every(slot => occupiedSlots.has(`${r.id}-${hari}-${slot.start}-${slot.end}`))
+      );
+      if (allOccupied) fullyOccupiedRoomIds.add(r.id);
+    });
+
     return DataStore.jadwal
       .map(j => DataStore.getJadwalDetail(j))
       .filter(j => {
@@ -117,6 +193,9 @@ const Jadwal = {
         if (this.filters.semester && j.semester != this.filters.semester) return false;
         if (this.filters.gedung && j.ruangan && j.ruangan.gedung_id != this.filters.gedung) return false;
         if (this.filters.hari && j.hari !== this.filters.hari) return false;
+        // Room availability filter
+        if (this.filters.ketersediaan === 'tersedia' && j.ruangan_id && !availableRoomIds.has(j.ruangan_id)) return false;
+        if (this.filters.ketersediaan === 'terisi' && j.ruangan_id && !fullyOccupiedRoomIds.has(j.ruangan_id)) return false;
         return true;
       });
   },
@@ -202,6 +281,38 @@ const Jadwal = {
   onCellClick(hari, jamMulai, jamSelesai) {
     this.editingId = null;
     this.openForm(hari, jamMulai, jamSelesai);
+  },
+
+  changeMonth(dir) {
+    this.currentMonth += dir;
+    if (this.currentMonth > 11) { this.currentMonth = 0; this.currentYear++; }
+    if (this.currentMonth < 0) { this.currentMonth = 11; this.currentYear--; }
+    this.selectedWeek = 1;
+    const content = document.getElementById('pageContent');
+    if (content) this.render(content);
+  },
+
+  goToToday() {
+    const now = new Date();
+    this.currentMonth = now.getMonth();
+    this.currentYear = now.getFullYear();
+    this.selectedWeek = Math.ceil(now.getDate() / 7);
+    const content = document.getElementById('pageContent');
+    if (content) this.render(content);
+  },
+
+  selectWeek(num) {
+    this.selectedWeek = num;
+    const content = document.getElementById('pageContent');
+    if (content) this.render(content);
+  },
+
+  getJadwalCountForWeek(weekNum) {
+    // Simulate jadwal count per week based on existing data
+    const base = DataStore.jadwal.length;
+    const perWeek = Math.ceil(base / 4);
+    if (weekNum <= 4) return perWeek;
+    return Math.max(0, base - perWeek * 4);
   },
 
   deleteFromCalendar(id) {

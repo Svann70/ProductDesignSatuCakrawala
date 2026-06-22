@@ -16,26 +16,21 @@ const Preferensi = {
 
         <div class="card" style="margin-bottom: var(--space-4)">
           <div class="card-header">
-            <h3>Peta Preferensi Dosen (per SKS = 45 menit)</h3>
+            <h3>Peta Preferensi Dosen</h3>
             <span class="badge badge-info">${DataStore.semester[0].tahun_ajaran} ${DataStore.semester[0].jenis}</span>
           </div>
           <div class="card-body">
-            <div style="font-size: var(--text-sm); color: var(--color-ink-muted); margin-bottom: var(--space-3)">
-              Setiap kotak = 1 SKS (45 menit). Istirahat 15 menit antar slot. Warna = dosen. Merah = konflik ("war") antar dosen.
-            </div>
             ${this.renderPreferenceGrid(prefMap, conflicts)}
           </div>
         </div>
 
-        <div class="card" style="max-width: 720px">
+        <div class="card">
           <div class="card-header">
-            <h3>Daftar Preferensi Dosen</h3>
+            <h3>Daftar Dosen</h3>
+            <span style="font-size: var(--text-xs); color: var(--color-ink-subdued)">${prefMap ? Object.keys(prefMap).length : 0}/${dosenList.length} mengisi</span>
           </div>
-          <div class="card-body">
-            <p style="font-size: var(--text-sm); color: var(--color-ink-muted); margin-bottom: var(--space-4)">
-              Klik dosen untuk mengelola preferensi jadwal mengajar. 1 SKS = 45 menit.
-            </p>
-            <div style="display: flex; flex-direction: column; gap: var(--space-3)">
+          <div style="padding: var(--space-2) var(--space-3)">
+            <div style="display: flex; flex-direction: column; gap: 1px; background: var(--color-border-subtle); border-radius: var(--radius-md); overflow: hidden">
               ${dosenList.map(d => {
                 const pref = prefMap[d.id];
                 const jur = DataStore.getJurusan(d.jurusan_id);
@@ -43,22 +38,16 @@ const Preferensi = {
                 const isConflict = pref && this.hasDosenConflict(d.id, conflicts);
                 const totalSKS = pref ? pref.details.length : 0;
                 return `
-                  <div style="display: flex; align-items: center; justify-content: space-between; padding: var(--space-3) var(--space-4); border: 1px solid ${isConflict ? 'var(--color-error)' : 'var(--color-border)'}; border-radius: var(--radius-md); background: ${isConflict ? 'var(--color-error-bg)' : 'var(--color-canvas)'}">
-                    <div style="display: flex; align-items: center; gap: var(--space-3)">
-                      <div style="width: 8px; height: 8px; border-radius: 2px; background: ${color}"></div>
-                      <div>
-                        <div style="font-weight: var(--weight-semibold); font-size: var(--text-base)">${d.nama}</div>
-                        <div style="font-size: var(--text-sm); color: var(--color-ink-muted)">${jur?.kode || ''} ${totalSKS > 0 ? `(${totalSKS} SKS/minggu)` : ''}</div>
-                      </div>
+                  <div style="display: flex; align-items: center; justify-content: space-between; padding: var(--space-2) var(--space-3); background: ${isConflict ? 'var(--color-error-bg)' : 'var(--color-canvas)'}; cursor: pointer" onclick="Preferensi.openEdit(${d.id})">
+                    <div style="display: flex; align-items: center; gap: var(--space-2)">
+                      <div style="width: 6px; height: 6px; border-radius: 1px; background: ${color}"></div>
+                      <span style="font-size: var(--text-sm); font-weight: var(--weight-medium)">${d.nama.split(',')[0]}</span>
+                      <span style="font-size: var(--text-xs); color: var(--color-ink-subdued)">${jur?.kode || ''}</span>
                     </div>
-                    <div style="display: flex; align-items: center; gap: var(--space-3)">
-                      ${isConflict ? '<span class="badge badge-error">Ada Konflik</span>' : ''}
-                      ${pref
-                        ? `<span class="badge badge-success">Sudah Mengisi</span>
-                           <button class="btn btn-secondary btn-sm" onclick="Preferensi.openEdit(${d.id})">Edit</button>`
-                        : `<span class="badge badge-warning">Belum Mengisi</span>
-                           <button class="btn btn-primary btn-sm" onclick="Preferensi.openEdit(${d.id})">Isi Preferensi</button>`
-                      }
+                    <div style="display: flex; align-items: center; gap: var(--space-2)">
+                      ${totalSKS > 0 ? `<span style="font-size: var(--text-xs); color: var(--color-ink-muted)">${totalSKS} SKS</span>` : ''}
+                      ${isConflict ? '<span class="badge badge-error" style="font-size: 10px">Konflik</span>' : ''}
+                      ${pref ? '<span class="badge badge-success" style="font-size: 10px">Sudah</span>' : '<span class="badge badge-warning" style="font-size: 10px">Belum</span>'}
                     </div>
                   </div>
                 `;
@@ -179,7 +168,7 @@ const Preferensi = {
       document.body.appendChild(modal);
     }
 
-    // Build day slot data
+    // Build day slot data for THIS dosen
     const daySlotData = {};
     DataStore.hari.forEach(h => { daySlotData[h] = {}; });
     if (pref) {
@@ -190,6 +179,17 @@ const Preferensi = {
         }
       });
     }
+
+    // Build set of slots taken by OTHER dosen (blocked slots)
+    const blockedSlots = {}; // "hari-start-end" -> dosenName
+    DataStore.preferensi.forEach(p => {
+      if (p.dosen_id === dosenId) return; // skip current dosen
+      const otherDosen = DataStore.getDosen(p.dosen_id);
+      p.details.forEach(d => {
+        const key = `${d.hari}-${d.jam_mulai}-${d.jam_selesai}`;
+        blockedSlots[key] = otherDosen?.nama?.split(',')[0] || 'Dosen lain';
+      });
+    });
 
     const prefSlots = DataStore.getPreferenceSlots();
     const morningSlots = prefSlots.filter(s => s.start < '12:00');
@@ -227,7 +227,16 @@ const Preferensi = {
                     <td style="padding: var(--space-2) var(--space-3); font-family: var(--font-mono); font-size: var(--text-xs); color: var(--color-ink-muted); border-bottom: 1px solid var(--color-border-subtle)">${slot.label}</td>
                     ${DataStore.hari.map(hari => {
                       const slotKey = `${slot.start}-${slot.end}`;
+                      const blockKey = `${hari}-${slot.start}-${slot.end}`;
                       const isChecked = daySlotData[hari][slotKey] || false;
+                      const isBlocked = blockedSlots[blockKey];
+                      if (isBlocked) {
+                        return `
+                          <td style="padding: var(--space-2); text-align: center; border-bottom: 1px solid var(--color-border-subtle); background: var(--color-error-bg)">
+                            <div style="font-size: 9px; color: var(--color-error); font-weight: var(--weight-medium)" title="${isBlocked}">${isBlocked.split(' ').pop()}</div>
+                          </td>
+                        `;
+                      }
                       return `
                         <td style="padding: var(--space-2); text-align: center; border-bottom: 1px solid var(--color-border-subtle)">
                           <input type="checkbox" class="pref-slot-check" data-hari="${hari}" data-start="${slot.start}" data-end="${slot.end}" ${isChecked ? 'checked' : ''} style="width: 16px; height: 16px; accent-color: var(--color-primary); cursor: pointer">
@@ -242,7 +251,16 @@ const Preferensi = {
                     <td style="padding: var(--space-2) var(--space-3); font-family: var(--font-mono); font-size: var(--text-xs); color: var(--color-ink-muted); border-bottom: 1px solid var(--color-border-subtle)">${slot.label}</td>
                     ${DataStore.hari.map(hari => {
                       const slotKey = `${slot.start}-${slot.end}`;
+                      const blockKey = `${hari}-${slot.start}-${slot.end}`;
                       const isChecked = daySlotData[hari][slotKey] || false;
+                      const isBlocked = blockedSlots[blockKey];
+                      if (isBlocked) {
+                        return `
+                          <td style="padding: var(--space-2); text-align: center; border-bottom: 1px solid var(--color-border-subtle); background: var(--color-error-bg)">
+                            <div style="font-size: 9px; color: var(--color-error); font-weight: var(--weight-medium)" title="${isBlocked}">${isBlocked.split(' ').pop()}</div>
+                          </td>
+                        `;
+                      }
                       return `
                         <td style="padding: var(--space-2); text-align: center; border-bottom: 1px solid var(--color-border-subtle)">
                           <input type="checkbox" class="pref-slot-check" data-hari="${hari}" data-start="${slot.start}" data-end="${slot.end}" ${isChecked ? 'checked' : ''} style="width: 16px; height: 16px; accent-color: var(--color-primary); cursor: pointer">
@@ -255,12 +273,27 @@ const Preferensi = {
             </table>
           </div>
 
+          <div style="margin-top: var(--space-2); display: flex; gap: var(--space-4); font-size: var(--text-xs); color: var(--color-ink-muted)">
+            <div style="display: flex; align-items: center; gap: var(--space-1)">
+              <div style="width: 12px; height: 12px; border: 1px solid var(--color-border); border-radius: 2px; background: var(--color-canvas)"></div>
+              <span>Tersedia</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: var(--space-1)">
+              <div style="width: 12px; height: 12px; border-radius: 2px; background: var(--color-primary-subtle)"></div>
+              <span>Dipilih</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: var(--space-1)">
+              <div style="width: 12px; height: 12px; border-radius: 2px; background: var(--color-error-bg)"></div>
+              <span>Sudah diambil dosen lain</span>
+            </div>
+          </div>
+
           <div id="prefSummary" style="margin-top: var(--space-3)"></div>
         </div>
         <div class="pref-status-bar">
           <span>Status: <strong>${pref ? 'Sudah Diisi' : 'Belum Diisi'}</strong></span>
           <span id="prefSKSCount" style="margin-left: var(--space-3); font-size: var(--text-sm)"></span>
-          <span style="margin-left: auto; font-size: var(--text-xs); color: var(--color-ink-subdued)">Dapat diubah sebelum jadwal difinalisasi</span>
+          <span style="margin-left: auto; font-size: var(--text-xs); color: var(--color-ink-subdued)">Dapat diubah kapan saja</span>
         </div>
         <div class="modal-footer">
           <button class="btn btn-secondary" onclick="App.closeModal('prefModal')">Batal</button>
