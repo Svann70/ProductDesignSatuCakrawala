@@ -3,6 +3,9 @@
    ============================================ */
 
 const DataStore = {
+  // ---- Weekly Schedules ----
+  weeklyJadwal: {},
+
   // ---- Jurusan ----
   jurusan: [
     { id: 1, nama: 'Teknik Informatika', kode: 'TI', fakultas: 'Teknik' },
@@ -68,26 +71,38 @@ const DataStore = {
 
   // ---- Mata Kuliah ----
   mataKuliah: [
-    { id: 1, nama: 'Algoritma dan Pemrograman', kode: 'TI101', sks: 3, jurusan_id: 1, semester: 1 },
-    { id: 2, nama: 'Basis Data', kode: 'TI201', sks: 3, jurusan_id: 1, semester: 3 },
-    { id: 3, nama: 'Pemrograman Web', kode: 'TI202', sks: 3, jurusan_id: 1, semester: 3 },
-    { id: 4, nama: 'Jaringan Komputer', kode: 'TI301', sks: 3, jurusan_id: 1, semester: 5 },
-    { id: 5, nama: 'Kecerdasan Buatan', kode: 'TI401', sks: 3, jurusan_id: 1, semester: 7 },
-    { id: 6, nama: 'Sistem Operasi', kode: 'TI302', sks: 3, jurusan_id: 1, semester: 5 },
-    { id: 7, nama: 'Rekayasa Perangkat Lunak', kode: 'TI303', sks: 3, jurusan_id: 1, semester: 5 },
-    { id: 8, nama: 'Statistika', kode: 'SI101', sks: 3, jurusan_id: 2, semester: 1 },
-    { id: 9, nama: 'Pemrograman Berorientasi Objek', kode: 'SI201', sks: 3, jurusan_id: 2, semester: 3 },
-    { id: 10, nama: 'Analisis dan Desain Sistem', kode: 'SI301', sks: 3, jurusan_id: 2, semester: 5 },
-    { id: 11, nama: 'Kalkulus', kode: 'TE101', sks: 4, jurusan_id: 3, semester: 1 },
-    { id: 12, nama: 'Rangkaian Listrik', kode: 'TE201', sks: 3, jurusan_id: 3, semester: 3 },
-    { id: 13, nama: 'Mekanika Tanah', kode: 'TS201', sks: 3, jurusan_id: 4, semester: 3 },
-    { id: 14, nama: 'Manajemen Keuangan', kode: 'MJ201', sks: 3, jurusan_id: 5, semester: 3 },
-    { id: 15, nama: 'Akuntansi Dasar', kode: 'AK101', sks: 3, jurusan_id: 6, semester: 1 },
-    { id: 16, nama: 'Komunikasi Massa', kode: 'IK201', sks: 3, jurusan_id: 7, semester: 3 },
-    { id: 17, nama: 'Psikologi Umum', kode: 'PS101', sks: 3, jurusan_id: 8, semester: 1 },
-    { id: 18, nama: 'Hukum Perdata', kode: 'HK201', sks: 3, jurusan_id: 9, semester: 3 },
-    { id: 19, nama: 'Anatomi', kode: 'KD101', sks: 4, jurusan_id: 10, semester: 1 },
-    { id: 20, nama: 'Kalkulus II', kode: 'TI102', sks: 3, jurusan_id: 1, semester: 2 },
+    { id: 1, nama: 'Algoritma dan Pemrograman', kode: 'TI101', sks: 3, jurusan_id: 1, semester: 1, jenis_penjadwalan: 'Reguler' },
+    { id: 2, nama: 'Basis Data', kode: 'TI201', sks: 3, jurusan_id: 1, semester: 3, jenis_penjadwalan: 'Reguler' },
+    { id: 3, nama: 'Pemrograman Web', kode: 'TI202', sks: 3, jurusan_id: 1, semester: 3, jenis_penjadwalan: 'Reguler' },
+    { id: 4, nama: 'Jaringan Komputer', kode: 'TI301', sks: 3, jurusan_id: 1, semester: 5, jenis_penjadwalan: 'Reguler' },
+    { id: 5, nama: 'Kecerdasan Buatan', kode: 'TI401', sks: 3, jurusan_id: 1, semester: 7, jenis_penjadwalan: 'Reguler' },
+    { id: 6, nama: 'Sistem Operasi', kode: 'TI302', sks: 3, jurusan_id: 1, semester: 5, jenis_penjadwalan: 'Reguler' },
+    { id: 7, nama: 'Rekayasa Perangkat Lunak', kode: 'TI303', sks: 3, jurusan_id: 1, semester: 5, jenis_penjadwalan: 'Reguler' },
+    { id: 8, nama: 'Statistika', kode: 'SI101', sks: 3, jurusan_id: 2, semester: 1, jenis_penjadwalan: 'Reguler' },
+    { id: 9, nama: 'Pemrograman Berorientasi Objek', kode: 'SI201', sks: 3, jurusan_id: 2, semester: 3, jenis_penjadwalan: 'Reguler' },
+    { id: 10, nama: 'Analisis dan Desain Sistem', kode: 'SI301', sks: 3, jurusan_id: 2, semester: 5, jenis_penjadwalan: 'Reguler' },
+    { id: 11, nama: 'Kalkulus', kode: 'TE101', sks: 4, jurusan_id: 3, semester: 1, jenis_penjadwalan: 'Reguler' },
+    { id: 12, nama: 'Rangkaian Listrik', kode: 'TE201', sks: 3, jurusan_id: 3, semester: 3, jenis_penjadwalan: 'Reguler' },
+    { id: 13, nama: 'Mekanika Tanah', kode: 'TS201', sks: 3, jurusan_id: 4, semester: 3, jenis_penjadwalan: 'Reguler' },
+    { id: 14, nama: 'Manajemen Keuangan', kode: 'MJ201', sks: 3, jurusan_id: 5, semester: 3, jenis_penjadwalan: 'Reguler' },
+    { id: 15, nama: 'Akuntansi Dasar', kode: 'AK101', sks: 3, jurusan_id: 6, semester: 1, jenis_penjadwalan: 'Reguler' },
+    { id: 16, nama: 'Komunikasi Massa', kode: 'IK201', sks: 3, jurusan_id: 7, semester: 3, jenis_penjadwalan: 'Reguler' },
+    { id: 17, nama: 'Psikologi Umum', kode: 'PS101', sks: 3, jurusan_id: 8, semester: 1, jenis_penjadwalan: 'Reguler' },
+    { id: 18, nama: 'Hukum Perdata', kode: 'HK201', sks: 3, jurusan_id: 9, semester: 3, jenis_penjadwalan: 'Reguler' },
+    { id: 19, nama: 'Anatomi', kode: 'KD101', sks: 4, jurusan_id: 10, semester: 1, jenis_penjadwalan: 'Reguler' },
+    
+    // Semester 2 (Sistem Blok)
+    { id: 21, nama: 'Struktur Data (Blok A)', kode: 'TI211', sks: 3, jurusan_id: 1, semester: 2, jenis_penjadwalan: 'Blok A' },
+    { id: 22, nama: 'Sistem Basis Data (Blok A)', kode: 'TI212', sks: 3, jurusan_id: 1, semester: 2, jenis_penjadwalan: 'Blok A' },
+    { id: 23, nama: 'Matematika Diskrit (Blok A)', kode: 'TI213', sks: 3, jurusan_id: 1, semester: 2, jenis_penjadwalan: 'Blok A' },
+    { id: 24, nama: 'Pemrograman Fungsional (Blok B)', kode: 'TI214', sks: 3, jurusan_id: 1, semester: 2, jenis_penjadwalan: 'Blok B' },
+    { id: 25, nama: 'Komputasi Awan (Blok B)', kode: 'TI215', sks: 3, jurusan_id: 1, semester: 2, jenis_penjadwalan: 'Blok B' },
+    { id: 26, nama: 'Interaksi Manusia Komputer (Blok B)', kode: 'TI216', sks: 3, jurusan_id: 1, semester: 2, jenis_penjadwalan: 'Blok B' },
+
+    // Semester 4 (Sistem Reguler)
+    { id: 27, nama: 'Pemrograman Web Lanjut', kode: 'TI411', sks: 3, jurusan_id: 1, semester: 4, jenis_penjadwalan: 'Reguler' },
+    { id: 28, nama: 'Keamanan Informasi', kode: 'TI412', sks: 3, jurusan_id: 1, semester: 4, jenis_penjadwalan: 'Reguler' },
+    { id: 29, nama: 'Grafika Komputer', kode: 'TI413', sks: 3, jurusan_id: 1, semester: 4, jenis_penjadwalan: 'Reguler' },
   ],
 
   // ---- Semester ----
@@ -102,21 +117,20 @@ const DataStore = {
 
   // ---- Jadwal Kuliah ----
   jadwal: [
-    { id: 1, mata_kuliah_id: 1, kelas: 'A', dosen_id: 1, ruangan_id: 1, hari: 'Senin', jam_mulai: '08:00', jam_selesai: '10:00', jurusan_id: 1, semester: 1, status: 'Draft', is_gabungan: false },
-    { id: 2, mata_kuliah_id: 2, kelas: 'A', dosen_id: 2, ruangan_id: 1, hari: 'Senin', jam_mulai: '10:00', jam_selesai: '12:00', jurusan_id: 1, semester: 3, status: 'Draft', is_gabungan: false },
-    { id: 3, mata_kuliah_id: 3, kelas: 'A', dosen_id: 3, ruangan_id: 2, hari: 'Selasa', jam_mulai: '08:00', jam_selesai: '10:00', jurusan_id: 1, semester: 3, status: 'Draft', is_gabungan: false },
-    { id: 4, mata_kuliah_id: 8, kelas: 'A', dosen_id: 5, ruangan_id: 6, hari: 'Senin', jam_mulai: '08:00', jam_selesai: '10:00', jurusan_id: 2, semester: 1, status: 'Draft', is_gabungan: false },
-    { id: 5, mata_kuliah_id: 9, kelas: 'A', dosen_id: 4, ruangan_id: 7, hari: 'Selasa', jam_mulai: '10:00', jam_selesai: '12:00', jurusan_id: 2, semester: 3, status: 'Draft', is_gabungan: false },
-    { id: 6, mata_kuliah_id: 11, kelas: 'A', dosen_id: 6, ruangan_id: 10, hari: 'Rabu', jam_mulai: '08:00', jam_selesai: '10:00', jurusan_id: 3, semester: 1, status: 'Draft', is_gabungan: false },
-    { id: 7, mata_kuliah_id: 14, kelas: 'A', dosen_id: 9, ruangan_id: 11, hari: 'Kamis', jam_mulai: '13:00', jam_selesai: '15:00', jurusan_id: 5, semester: 3, status: 'Draft', is_gabungan: false },
-    { id: 8, mata_kuliah_id: 4, kelas: 'A', dosen_id: 1, ruangan_id: 3, hari: 'Rabu', jam_mulai: '10:00', jam_selesai: '12:00', jurusan_id: 1, semester: 5, status: 'Draft', is_gabungan: false },
-    { id: 9, mata_kuliah_id: 5, kelas: 'A', dosen_id: 2, ruangan_id: 4, hari: 'Kamis', jam_mulai: '08:00', jam_selesai: '10:00', jurusan_id: 1, semester: 7, status: 'Draft', is_gabungan: false },
-    { id: 10, mata_kuliah_id: 6, kelas: 'A', dosen_id: 3, ruangan_id: 5, hari: 'Jumat', jam_mulai: '08:00', jam_selesai: '10:00', jurusan_id: 1, semester: 5, status: 'Draft', is_gabungan: false },
-    { id: 11, mata_kuliah_id: 7, kelas: 'A', dosen_id: 1, ruangan_id: 2, hari: 'Selasa', jam_mulai: '13:00', jam_selesai: '15:00', jurusan_id: 1, semester: 5, status: 'Draft', is_gabungan: false },
-    { id: 12, mata_kuliah_id: 10, kelas: 'A', dosen_id: 5, ruangan_id: 8, hari: 'Rabu', jam_mulai: '13:00', jam_selesai: '15:00', jurusan_id: 2, semester: 5, status: 'Draft', is_gabungan: false },
-    { id: 13, mata_kuliah_id: 15, kelas: 'A', dosen_id: 10, ruangan_id: 12, hari: 'Jumat', jam_mulai: '10:00', jam_selesai: '12:00', jurusan_id: 6, semester: 1, status: 'Draft', is_gabungan: false },
-    { id: 14, mata_kuliah_id: 16, kelas: 'A', dosen_id: 11, ruangan_id: 13, hari: 'Kamis', jam_mulai: '10:00', jam_selesai: '12:00', jurusan_id: 7, semester: 3, status: 'Draft', is_gabungan: false },
-    { id: 15, mata_kuliah_id: 17, kelas: 'A', dosen_id: 12, ruangan_id: 16, hari: 'Senin', jam_mulai: '13:00', jam_selesai: '15:00', jurusan_id: 8, semester: 1, status: 'Draft', is_gabungan: false },
+    // Semester 4 (Reguler, full semester)
+    { id: 101, mata_kuliah_id: 27, kelas: 'A', dosen_id: 1, ruangan_id: 2, hari: 'Senin', jam_mulai: '08:00', jam_selesai: '10:00', jurusan_id: 1, semester: 4, status: 'Draft', is_gabungan: false },
+    { id: 102, mata_kuliah_id: 28, kelas: 'A', dosen_id: 3, ruangan_id: 3, hari: 'Selasa', jam_mulai: '10:00', jam_selesai: '12:00', jurusan_id: 1, semester: 4, status: 'Draft', is_gabungan: false },
+    
+    // Semester 2 (Blok A, Weeks 1-12)
+    // Note: weekly duration is doubled, e.g. 3 SKS becomes 6 SKS or 2 meetings of 3 hours, or a long 3-hour class twice a week. Let's make it 3 hours per meeting, e.g. 08:00 - 11:00.
+    { id: 201, mata_kuliah_id: 21, kelas: 'A', dosen_id: 2, ruangan_id: 1, hari: 'Rabu', jam_mulai: '08:00', jam_selesai: '11:00', jurusan_id: 1, semester: 2, status: 'Draft', is_gabungan: false },
+    { id: 202, mata_kuliah_id: 22, kelas: 'A', dosen_id: 4, ruangan_id: 1, hari: 'Kamis', jam_mulai: '08:00', jam_selesai: '11:00', jurusan_id: 1, semester: 2, status: 'Draft', is_gabungan: false },
+
+    // Semester 2 (Blok B, Weeks 13-24)
+    // Note: Sharing the SAME room R-1 (R-301) and SAME time as Blok A classes!
+    // Since Blok B is in different weeks than Blok A, this is perfectly valid and should not cause conflicts!
+    { id: 203, mata_kuliah_id: 24, kelas: 'A', dosen_id: 2, ruangan_id: 1, hari: 'Rabu', jam_mulai: '08:00', jam_selesai: '11:00', jurusan_id: 1, semester: 2, status: 'Draft', is_gabungan: false },
+    { id: 204, mata_kuliah_id: 25, kelas: 'A', dosen_id: 4, ruangan_id: 1, hari: 'Kamis', jam_mulai: '08:00', jam_selesai: '11:00', jurusan_id: 1, semester: 2, status: 'Draft', is_gabungan: false },
   ],
 
   // ---- Preferensi Dosen ----
@@ -268,6 +282,8 @@ const DataStore = {
     return colors[(mkId - 1) % colors.length];
   },
 
+  // ---- End of DataStore Helpers ----
+
   // Check preference conflicts ("war") - which dosen clash on same slot
   checkPreferenceConflicts() {
     const slotMap = {}; // "hari-jam_mulai-jam_selesai" -> [dosen_id]
@@ -308,9 +324,10 @@ const DataStore = {
   },
 
   // Check conflict
-  checkConflict(jadwal, excludeId) {
+  checkConflict(jadwal, excludeId, customList) {
     const conflicts = [];
-    for (const j of this.jadwal) {
+    const listToCheck = customList || this.jadwal;
+    for (const j of listToCheck) {
       if (excludeId && j.id === excludeId) continue;
       if (j.hari !== jadwal.hari) continue;
 
@@ -319,6 +336,13 @@ const DataStore = {
         jadwal.jam_selesai > j.jam_mulai;
 
       if (!timeOverlap) continue;
+
+      // Check block period overlap
+      const type1 = this.getMataKuliah(jadwal.mata_kuliah_id)?.jenis_penjadwalan || 'Reguler';
+      const type2 = this.getMataKuliah(j.mata_kuliah_id)?.jenis_penjadwalan || 'Reguler';
+
+      const blocksOverlap = (type1 === 'Reguler' || type2 === 'Reguler' || type1 === type2);
+      if (!blocksOverlap) continue;
 
       // Dosen conflict
       if (j.dosen_id === jadwal.dosen_id) {
@@ -340,13 +364,20 @@ const DataStore = {
   },
 
   // Get available rooms for a time slot
-  getAvailableRooms(hari, jam_mulai, jam_selesai, excludeId) {
+  getAvailableRooms(hari, jam_mulai, jam_selesai, excludeId, customList, targetMataKuliahId) {
     const occupiedIds = new Set();
-    for (const j of this.jadwal) {
+    const listToCheck = customList || this.jadwal;
+    const type1 = targetMataKuliahId ? (this.getMataKuliah(targetMataKuliahId)?.jenis_penjadwalan || 'Reguler') : 'Reguler';
+
+    for (const j of listToCheck) {
       if (excludeId && j.id === excludeId) continue;
       if (j.hari !== hari) continue;
       const overlap = jam_mulai < j.jam_selesai && jam_selesai > j.jam_mulai;
-      if (overlap) occupiedIds.add(j.ruangan_id);
+      if (overlap) {
+        const type2 = this.getMataKuliah(j.mata_kuliah_id)?.jenis_penjadwalan || 'Reguler';
+        const blocksOverlap = (type1 === 'Reguler' || type2 === 'Reguler' || type1 === type2);
+        if (blocksOverlap) occupiedIds.add(j.ruangan_id);
+      }
     }
     return this.ruangan.filter(r => r.is_active && !occupiedIds.has(r.id));
   },

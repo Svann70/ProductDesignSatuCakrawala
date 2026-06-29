@@ -6,9 +6,18 @@ const Jadwal = {
   filters: { search: '', jurusan: '', semester: '', gedung: '', hari: '', ketersediaan: '' },
   viewMode: 'kalender', // kalender | ruangan | dosen | jurusan | hari
   editingId: null,
-  selectedWeek: 1,
-  currentMonth: new Date().getMonth(),
-  currentYear: new Date().getFullYear(),
+  activeSemesterFocus: 2, // 2 | 4
+  activeBlockPeriod: 'Blok A', // 'Blok A' | 'Blok B'
+  selectedWeek: 2,
+  currentMonth: 5, // June
+  currentYear: 2026,
+  activeTab: 'master', // 'master' | 'mingguan'
+
+  getAcademicWeek() {
+    let monthOffset = this.currentMonth - 8; // September is index 8
+    if (monthOffset < 0) monthOffset += 12;
+    return (monthOffset * 4) + this.selectedWeek;
+  },
 
   render(container) {
     this.container = container;
@@ -17,63 +26,26 @@ const Jadwal = {
 
   renderPage() {
     const filtered = this.getFiltered();
-    const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-    const monthName = months[this.currentMonth];
-    const now = new Date();
-    const isCurrentMonth = this.currentMonth === now.getMonth() && this.currentYear === now.getFullYear();
-    const currentWeek = isCurrentMonth ? Math.ceil(now.getDate() / 7) : 1;
-
-    // Week date ranges
-    const weeks = [
-      { num: 1, label: '1-7' },
-      { num: 2, label: '8-14' },
-      { num: 3, label: '15-21' },
-      { num: 4, label: '22-28' },
-      { num: 5, label: '29-31' },
-    ];
 
     this.container.innerHTML = `
       <div class="page-content-inner">
-        <!-- Month & Week Selector -->
-        <div style="margin-bottom: var(--space-4)">
-          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-3)">
-            <div style="display: flex; align-items: center; gap: var(--space-2)">
-              <button class="btn btn-ghost btn-icon btn-sm" onclick="Jadwal.changeMonth(-1)" title="Bulan sebelumnya">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
-              </button>
-              <div style="font-weight: var(--weight-semibold); font-size: var(--text-lg); min-width: 180px; text-align: center">${monthName} ${this.currentYear}</div>
-              <button class="btn btn-ghost btn-icon btn-sm" onclick="Jadwal.changeMonth(1)" title="Bulan berikutnya">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
-              </button>
-              ${!isCurrentMonth ? '<button class="btn btn-ghost btn-sm" onclick="Jadwal.goToToday()" style="margin-left: var(--space-2)">Hari Ini</button>' : ''}
-            </div>
-          </div>
-          <!-- Week Cards -->
-          <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--space-2)">
-            ${weeks.map(w => {
-              const isActive = this.selectedWeek === w.num;
-              const isCurrent = isCurrentMonth && currentWeek === w.num;
-              const jadwalCount = this.getJadwalCountForWeek(w.num);
-              return `
-                <div onclick="Jadwal.selectWeek(${w.num})" style="
-                  padding: var(--space-2) var(--space-3);
-                  border: 1px solid ${isActive ? 'var(--color-primary)' : 'var(--color-border)'};
-                  border-radius: var(--radius-md);
-                  background: ${isActive ? 'var(--color-primary-subtle)' : 'var(--color-canvas)'};
-                  cursor: pointer;
-                  text-align: center;
-                  transition: all 0.15s;
-                  position: relative;
-                ">
-                  ${isCurrent ? '<div style="position: absolute; top: 4px; right: 6px; width: 6px; height: 6px; border-radius: 50%; background: var(--color-primary)"></div>' : ''}
-                  <div style="font-size: var(--text-xs); color: ${isActive ? 'var(--color-primary-deep)' : 'var(--color-ink-subdued)'}; font-weight: var(--weight-medium)">Minggu ${w.num}</div>
-                  <div style="font-size: var(--text-xs); color: var(--color-ink-subdued); font-family: var(--font-mono)">${w.label}</div>
-                  <div style="font-size: var(--text-xs); color: ${isActive ? 'var(--color-primary-deep)' : 'var(--color-ink-muted)'}; margin-top: 2px">${jadwalCount} jadwal</div>
-                </div>
-              `;
-            }).join('')}
+        <!-- Cohort Switcher (Tingkat 1) -->
+        <div style="display: flex; justify-content: center; margin-bottom: var(--space-3)">
+          <div class="view-toggle" style="padding: 4px; border-radius: var(--radius-lg)">
+            <button class="view-toggle-btn ${this.activeSemesterFocus === 2 ? 'active' : ''}" style="padding: var(--space-2) var(--space-4)" id="btnSelectSem2">Sistem Blok</button>
+            <button class="view-toggle-btn ${this.activeSemesterFocus === 4 ? 'active' : ''}" style="padding: var(--space-2) var(--space-4)" id="btnSelectSem4">Sistem Non-Blok (Reguler)</button>
           </div>
         </div>
+
+        <!-- Period Switcher (Tingkat 2 - Only for Sem 2) -->
+        ${this.activeSemesterFocus === 2 ? `
+          <div style="display: flex; justify-content: center; margin-bottom: var(--space-4)">
+            <div class="view-toggle" style="padding: 2px; border-radius: var(--radius-md); background: var(--color-surface-2)">
+              <button class="view-toggle-btn btn-sm ${this.activeBlockPeriod === 'Blok A' ? 'active' : ''}" style="padding: var(--space-1) var(--space-3); font-size: var(--text-xs)" id="tabBlokA">Blok A (Bulan 1-3)</button>
+              <button class="view-toggle-btn btn-sm ${this.activeBlockPeriod === 'Blok B' ? 'active' : ''}" style="padding: var(--space-1) var(--space-3); font-size: var(--text-xs)" id="tabBlokB">Blok B (Bulan 4-6)</button>
+            </div>
+          </div>
+        ` : ''}
 
         <!-- Toolbar -->
         <div class="jadwal-toolbar">
@@ -132,27 +104,55 @@ const Jadwal = {
       this.updateView();
     });
 
-    document.querySelectorAll('.view-toggle-btn').forEach(btn => {
+    document.querySelectorAll('.view-toggle-btn[data-view]').forEach(btn => {
       btn.addEventListener('click', () => {
         this.viewMode = btn.dataset.view;
-        document.querySelectorAll('.view-toggle-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.view-toggle-btn[data-view]').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         this.updateView();
       });
     });
+
+    document.getElementById('btnSelectSem2').addEventListener('click', () => {
+      this.activeSemesterFocus = 2;
+      this.renderPage();
+    });
+    document.getElementById('btnSelectSem4').addEventListener('click', () => {
+      this.activeSemesterFocus = 4;
+      this.renderPage();
+    });
+
+    const tabBlokA = document.getElementById('tabBlokA');
+    if (tabBlokA) {
+      tabBlokA.addEventListener('click', () => {
+        this.activeBlockPeriod = 'Blok A';
+        this.renderPage();
+      });
+    }
+
+    const tabBlokB = document.getElementById('tabBlokB');
+    if (tabBlokB) {
+      tabBlokB.addEventListener('click', () => {
+        this.activeBlockPeriod = 'Blok B';
+        this.renderPage();
+      });
+    }
 
     document.getElementById('btnAddJadwal').addEventListener('click', () => {
       this.editingId = null;
       this.openForm();
     });
 
-    document.getElementById('btnAutoRolling').addEventListener('click', () => {
-      if (confirm('Apakah Anda ingin menjadwalkan ulang (auto-rolling) seluruh kelas Semester 1? Tindakan ini akan menghapus jadwal Semester 1 saat ini dan membuat jadwal baru secara otomatis bebas dari konflik ruangan dan dosen.')) {
-        const count = DataStore.generateSemesterSchedule(1);
-        App.toast(`Berhasil melakukan rolling! ${count} kelas Semester 1 otomatis dijadwalkan tanpa konflik.`);
-        this.updateView();
-      }
-    });
+    const btnAutoRolling = document.getElementById('btnAutoRolling');
+    if (btnAutoRolling) {
+      btnAutoRolling.addEventListener('click', () => {
+        if (confirm('Apakah Anda ingin menjadwalkan ulang (auto-rolling) seluruh kelas Semester 1? Tindakan ini akan menghapus jadwal Semester 1 saat ini dan membuat jadwal baru secara otomatis bebas dari konflik ruangan dan dosen.')) {
+          const count = DataStore.generateSemesterSchedule(1);
+          App.toast(`Berhasil melakukan rolling! ${count} kelas Semester 1 otomatis dijadwalkan tanpa konflik.`);
+          this.updateView();
+        }
+      });
+    }
   },
 
   updateView() {
@@ -162,10 +162,15 @@ const Jadwal = {
     this.bindTableEvents();
   },
 
+  getActiveList() {
+    return DataStore.jadwal;
+  },
+
   getFiltered() {
+    const list = this.getActiveList();
     // Build set of occupied room-time slots
     const occupiedSlots = new Set(); // "ruanganId-hari-jamMulai-jamSelesai"
-    DataStore.jadwal.forEach(j => {
+    list.forEach(j => {
       occupiedSlots.add(`${j.ruangan_id}-${j.hari}-${j.jam_mulai}-${j.jam_selesai}`);
     });
 
@@ -189,14 +194,24 @@ const Jadwal = {
       if (allOccupied) fullyOccupiedRoomIds.add(r.id);
     });
 
-    return DataStore.jadwal
+    return list
       .map(j => DataStore.getJadwalDetail(j))
       .filter(j => {
+        // Filter by cohort (Semester 2 vs 4)
+        if (j.semester !== this.activeSemesterFocus) return false;
+
+        // If Semester 2 (Block), filter by block period
+        if (this.activeSemesterFocus === 2) {
+          const type = j.mata_kuliah?.jenis_penjadwalan || 'Reguler';
+          if (type !== 'Reguler' && type !== this.activeBlockPeriod) return false;
+        }
+
         if (this.filters.search) {
           const q = this.filters.search.toLowerCase();
-          if (!j.mata_kuliah?.nama.toLowerCase().includes(q) &&
-              !j.dosen?.nama.toLowerCase().includes(q) &&
-              !j.mata_kuliah?.kode.toLowerCase().includes(q)) return false;
+          const mkNama = j.mata_kuliah?.nama?.toLowerCase() || '';
+          const dosenNama = j.dosen?.nama?.toLowerCase() || '';
+          const mkKode = j.mata_kuliah?.kode?.toLowerCase() || '';
+          if (!mkNama.includes(q) && !dosenNama.includes(q) && !mkKode.includes(q)) return false;
         }
         if (this.filters.jurusan && j.jurusan_id != this.filters.jurusan) return false;
         if (this.filters.semester && j.semester != this.filters.semester) return false;
@@ -297,45 +312,18 @@ const Jadwal = {
     this.openForm(hari, jamMulai, jamSelesai);
   },
 
-  changeMonth(dir) {
-    this.currentMonth += dir;
-    if (this.currentMonth > 11) { this.currentMonth = 0; this.currentYear++; }
-    if (this.currentMonth < 0) { this.currentMonth = 11; this.currentYear--; }
-    this.selectedWeek = 1;
-    const content = document.getElementById('pageContent');
-    if (content) this.render(content);
-  },
-
-  goToToday() {
-    const now = new Date();
-    this.currentMonth = now.getMonth();
-    this.currentYear = now.getFullYear();
-    this.selectedWeek = Math.ceil(now.getDate() / 7);
-    const content = document.getElementById('pageContent');
-    if (content) this.render(content);
-  },
-
-  selectWeek(num) {
-    this.selectedWeek = num;
-    const content = document.getElementById('pageContent');
-    if (content) this.render(content);
-  },
-
-  getJadwalCountForWeek(weekNum) {
-    // Simulate jadwal count per week based on existing data
-    const base = DataStore.jadwal.length;
-    const perWeek = Math.ceil(base / 4);
-    if (weekNum <= 4) return perWeek;
-    return Math.max(0, base - perWeek * 4);
+  deleteJadwal(id) {
+    return DataStore.deleteJadwal(id);
   },
 
   deleteFromCalendar(id) {
-    const jadwal = DataStore.jadwal.find(j => j.id === id);
+    const list = this.getActiveList();
+    const jadwal = list.find(j => j.id === id);
     if (!jadwal) return;
     const mk = DataStore.getMataKuliah(jadwal.mata_kuliah_id);
     const dosen = DataStore.getDosen(jadwal.dosen_id);
     if (confirm(`Hapus jadwal "${mk?.nama || '-'}" kelas ${jadwal.kelas} (${dosen?.nama?.split(',')[0] || '-'}) pada ${jadwal.hari} ${jadwal.jam_mulai}-${jadwal.jam_selesai}?`)) {
-      DataStore.deleteJadwal(id);
+      this.deleteJadwal(id);
       App.toast('Jadwal berhasil dihapus.');
       this.updateView();
     }
@@ -555,7 +543,8 @@ const Jadwal = {
 
   openForm(presetHari, presetJamMulai, presetJamSelesai) {
     const isEdit = this.editingId !== null;
-    const jadwal = isEdit ? DataStore.jadwal.find(j => j.id === this.editingId) : null;
+    const list = this.getActiveList();
+    const jadwal = isEdit ? list.find(j => j.id === this.editingId) : null;
 
     // Build or reuse modal
     let modal = document.getElementById('jadwalModal');
@@ -569,6 +558,7 @@ const Jadwal = {
     const defaultHari = jadwal?.hari || presetHari || 'Senin';
     const defaultJamMulai = jadwal?.jam_mulai || presetJamMulai || '08:00';
     const defaultJamSelesai = jadwal?.jam_selesai || presetJamSelesai || '10:00';
+    const defaultSemester = jadwal?.semester || this.activeSemesterFocus || 2;
 
     modal.innerHTML = `
       <div class="modal modal-wide">
@@ -588,7 +578,7 @@ const Jadwal = {
             <div class="form-group">
               <label class="form-label">Semester <span class="required">*</span></label>
               <select class="form-select" id="formSemester">
-                ${[1,2,3,4,5,6,7,8].map(s => `<option value="${s}" ${jadwal?.semester === s ? 'selected' : ''}>${s}</option>`).join('')}
+                ${[1,2,3,4,5,6,7,8].map(s => `<option value="${s}" ${defaultSemester === s ? 'selected' : ''}>${s}</option>`).join('')}
               </select>
             </div>
           </div>
@@ -597,7 +587,7 @@ const Jadwal = {
               <label class="form-label">Mata Kuliah <span class="required">*</span></label>
               <select class="form-select" id="formMataKuliah">
                 <option value="">Pilih Mata Kuliah</option>
-                ${DataStore.mataKuliah.map(m => `<option value="${m.id}" ${jadwal?.mata_kuliah_id === m.id ? 'selected' : ''}>${m.nama} (${m.kode})</option>`).join('')}
+                ${DataStore.mataKuliah.map(m => `<option value="${m.id}" ${jadwal?.mata_kuliah_id === m.id ? 'selected' : ''}>${m.nama} (${m.kode}) [${m.jenis_penjadwalan}]</option>`).join('')}
               </select>
             </div>
             <div class="form-group">
@@ -653,6 +643,34 @@ const Jadwal = {
 
     App.openModal('jadwalModal');
 
+    // Auto duration calculator
+    const updateAutoDuration = () => {
+      const mkId = parseInt(document.getElementById('formMataKuliah').value);
+      if (!mkId) return;
+      const mk = DataStore.getMataKuliah(mkId);
+      if (!mk) return;
+      
+      const jamMulaiInput = document.getElementById('formJamMulai');
+      const jamSelesaiInput = document.getElementById('formJamSelesai');
+      if (!jamMulaiInput || !jamSelesaiInput) return;
+      
+      const startStr = jamMulaiInput.value;
+      if (!startStr) return;
+      
+      const [h, m] = startStr.split(':').map(Number);
+      const isBlock = mk.jenis_penjadwalan === 'Blok A' || mk.jenis_penjadwalan === 'Blok B';
+      const durationHours = isBlock ? 3 : 2;
+      
+      let endH = h + durationHours;
+      if (endH > 22) endH = 22;
+      
+      const endStr = `${String(endH).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+      jamSelesaiInput.value = endStr;
+      
+      updateDosenAndRuanganLists();
+      this.validateForm();
+    };
+
     // Dynamic dropdown filtering & status displays
     const updateDosenStatus = () => {
       const dosenId = parseInt(document.getElementById('formDosen').value);
@@ -662,13 +680,14 @@ const Jadwal = {
         display.innerHTML = '';
         return;
       }
-      const list = DataStore.jadwal.filter(j => j.dosen_id === dosenId && j.id !== this.editingId);
-      if (list.length > 0) {
+      const activeList = this.getActiveList();
+      const dosenJadwal = activeList.filter(j => j.dosen_id === dosenId && j.id !== this.editingId);
+      if (dosenJadwal.length > 0) {
         display.innerHTML = `
           <div style="font-size: var(--text-xs); color: var(--color-ink-muted); margin-top: var(--space-1)">
             <strong>Status Dosen:</strong> Terjadwal di:
             <ul style="margin: 2px 0 0 16px; padding: 0;">
-              ${list.map(j => {
+              ${dosenJadwal.map(j => {
                 const mk = DataStore.getMataKuliah(j.mata_kuliah_id);
                 return `<li>${mk?.nama || '-'} (${j.kelas}) pada ${j.hari} ${j.jam_mulai}-${j.jam_selesai}</li>`;
               }).join('')}
@@ -688,13 +707,14 @@ const Jadwal = {
         display.innerHTML = '';
         return;
       }
-      const list = DataStore.jadwal.filter(j => j.ruangan_id === ruanganId && j.id !== this.editingId);
-      if (list.length > 0) {
+      const activeList = this.getActiveList();
+      const roomJadwal = activeList.filter(j => j.ruangan_id === ruanganId && j.id !== this.editingId);
+      if (roomJadwal.length > 0) {
         display.innerHTML = `
           <div style="font-size: var(--text-xs); color: var(--color-ink-muted); margin-top: var(--space-1)">
             <strong>Status Ruangan:</strong> Terpakai di:
             <ul style="margin: 2px 0 0 16px; padding: 0;">
-              ${list.map(j => {
+              ${roomJadwal.map(j => {
                 const mk = DataStore.getMataKuliah(j.mata_kuliah_id);
                 return `<li>${mk?.nama || '-'} (${j.kelas}) pada ${j.hari} ${j.jam_mulai}-${j.jam_selesai}</li>`;
               }).join('')}
@@ -713,14 +733,17 @@ const Jadwal = {
 
       const currentDosenId = parseInt(document.getElementById('formDosen').value) || (jadwal ? jadwal.dosen_id : null);
       const currentRuanganId = parseInt(document.getElementById('formRuangan').value) || (jadwal ? jadwal.ruangan_id : null);
+      const currentMkId = parseInt(document.getElementById('formMataKuliah').value) || (jadwal ? jadwal.mata_kuliah_id : null);
+
+      const activeList = this.getActiveList();
 
       // Populate Dosen dropdown
       const dosenSelect = document.getElementById('formDosen');
       dosenSelect.innerHTML = '<option value="">Pilih Dosen</option>';
       DataStore.dosen.filter(d => d.status === 'Aktif').forEach(d => {
         const conflicts = DataStore.checkConflict({
-          hari, jam_mulai: jamMulai, jam_selesai: jamSelesai, dosen_id: d.id, ruangan_id: 999999
-        }, this.editingId);
+          hari, jam_mulai: jamMulai, jam_selesai: jamSelesai, dosen_id: d.id, ruangan_id: 999999, mata_kuliah_id: currentMkId
+        }, this.editingId, activeList);
         const isBusy = conflicts.some(c => c.type === 'dosen');
         if (!isBusy || d.id === currentDosenId) {
           const opt = document.createElement('option');
@@ -736,8 +759,8 @@ const Jadwal = {
       ruanganSelect.innerHTML = '<option value="">Pilih Ruangan</option>';
       DataStore.ruangan.filter(r => r.is_active).forEach(r => {
         const conflicts = DataStore.checkConflict({
-          hari, jam_mulai: jamMulai, jam_selesai: jamSelesai, dosen_id: 999999, ruangan_id: r.id
-        }, this.editingId);
+          hari, jam_mulai: jamMulai, jam_selesai: jamSelesai, dosen_id: 999999, ruangan_id: r.id, mata_kuliah_id: currentMkId
+        }, this.editingId, activeList);
         const isBusy = conflicts.some(c => c.type === 'ruangan');
         if (!isBusy || r.id === currentRuanganId) {
           const opt = document.createElement('option');
@@ -765,6 +788,9 @@ const Jadwal = {
     });
     document.getElementById('formRuangan').addEventListener('change', () => {
       updateRuanganStatus();
+    });
+    document.getElementById('formMataKuliah').addEventListener('change', () => {
+      updateAutoDuration();
     });
 
     ['formHari', 'formJamMulai', 'formJamSelesai'].forEach(id => {
@@ -803,6 +829,7 @@ const Jadwal = {
   },
 
   validateForm() {
+    const mkId = parseInt(document.getElementById('formMataKuliah').value);
     const hari = document.getElementById('formHari').value;
     const jamMulai = document.getElementById('formJamMulai').value;
     const jamSelesai = document.getElementById('formJamSelesai').value;
@@ -818,8 +845,8 @@ const Jadwal = {
     }
 
     const conflicts = DataStore.checkConflict({
-      hari, jam_mulai: jamMulai, jam_selesai: jamSelesai, dosen_id: dosenId, ruangan_id: ruanganId,
-    }, this.editingId);
+      hari, jam_mulai: jamMulai, jam_selesai: jamSelesai, dosen_id: dosenId, ruangan_id: ruanganId, mata_kuliah_id: mkId
+    }, this.editingId, this.getActiveList());
 
     if (conflicts.length > 0) {
       alertDiv.innerHTML = `
@@ -864,7 +891,8 @@ const Jadwal = {
       hari, jam_mulai: jamMulai, jam_selesai: jamSelesai, jurusan_id: jurusanId, semester,
     };
 
-    const conflicts = DataStore.checkConflict(data, this.editingId);
+    const activeList = this.getActiveList();
+    const conflicts = DataStore.checkConflict(data, this.editingId, activeList);
     if (conflicts.length > 0) {
       App.toast('Tidak dapat menyimpan: masih ada konflik jadwal.', 'error');
       return;
