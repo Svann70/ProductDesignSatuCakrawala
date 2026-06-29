@@ -26,6 +26,15 @@ const Jadwal = {
 
   renderPage() {
     const filtered = this.getFiltered();
+    const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+    const monthName = months[this.currentMonth];
+    const weeks = [
+      { num: 1, label: '1-7' },
+      { num: 2, label: '8-14' },
+      { num: 3, label: '15-21' },
+      { num: 4, label: '22-28' },
+      { num: 5, label: '29-31' },
+    ];
 
     this.container.innerHTML = `
       <div class="page-content-inner">
@@ -37,15 +46,50 @@ const Jadwal = {
           </div>
         </div>
 
-        <!-- Period Switcher (Tingkat 2 - Only for Sem 2) -->
+        <!-- Period Switcher (Tingkat 2 - Only for Blok) -->
         ${this.activeSemesterFocus === 2 ? `
-          <div style="display: flex; justify-content: center; margin-bottom: var(--space-4)">
+          <div style="display: flex; justify-content: center; margin-bottom: var(--space-3)">
             <div class="view-toggle" style="padding: 2px; border-radius: var(--radius-md); background: var(--color-surface-2)">
               <button class="view-toggle-btn btn-sm ${this.activeBlockPeriod === 'Blok A' ? 'active' : ''}" style="padding: var(--space-1) var(--space-3); font-size: var(--text-xs)" id="tabBlokA">Blok A (Bulan 1-3)</button>
               <button class="view-toggle-btn btn-sm ${this.activeBlockPeriod === 'Blok B' ? 'active' : ''}" style="padding: var(--space-1) var(--space-3); font-size: var(--text-xs)" id="tabBlokB">Blok B (Bulan 4-6)</button>
             </div>
           </div>
         ` : ''}
+
+        <!-- Month & Week Navigator -->
+        <div style="margin-bottom: var(--space-4)">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-3)">
+            <div style="display: flex; align-items: center; gap: var(--space-2)">
+              <button class="btn btn-ghost btn-icon btn-sm" id="btnPrevMonth" title="Bulan sebelumnya">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+              </button>
+              <div style="font-weight: var(--weight-semibold); font-size: var(--text-lg); min-width: 180px; text-align: center">${monthName} ${this.currentYear}</div>
+              <button class="btn btn-ghost btn-icon btn-sm" id="btnNextMonth" title="Bulan berikutnya">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+              </button>
+            </div>
+          </div>
+          <!-- Week Cards -->
+          <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--space-2)">
+            ${weeks.map(w => {
+              const isActive = this.selectedWeek === w.num;
+              return `
+                <div class="week-card" data-week="${w.num}" style="
+                  padding: var(--space-2) var(--space-3);
+                  border: 1px solid ${isActive ? 'var(--color-primary)' : 'var(--color-border)'};
+                  border-radius: var(--radius-md);
+                  background: ${isActive ? 'var(--color-primary-subtle)' : 'var(--color-canvas)'};
+                  cursor: pointer;
+                  text-align: center;
+                  transition: all 0.15s;
+                ">
+                  <div style="font-size: var(--text-xs); color: ${isActive ? 'var(--color-primary-deep)' : 'var(--color-ink-subdued)'}; font-weight: var(--weight-medium)">Minggu ${w.num}</div>
+                  <div style="font-size: var(--text-xs); color: var(--color-ink-subdued); font-family: var(--font-mono)">${w.label}</div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
 
         <!-- Toolbar -->
         <div class="jadwal-toolbar">
@@ -57,10 +101,6 @@ const Jadwal = {
             <select class="filter-select" id="filterJurusan">
               <option value="">Semua Jurusan</option>
               ${DataStore.jurusan.map(j => `<option value="${j.id}" ${this.filters.jurusan == j.id ? 'selected' : ''}>${j.nama}</option>`).join('')}
-            </select>
-            <select class="filter-select" id="filterSemester">
-              <option value="">Semua Semester</option>
-              ${[1,2,3,4,5,6,7,8].map(s => `<option value="${s}" ${this.filters.semester == s ? 'selected' : ''}>Semester ${s}</option>`).join('')}
             </select>
             <select class="filter-select" id="filterGedung">
               <option value="">Semua Gedung</option>
@@ -95,10 +135,6 @@ const Jadwal = {
       this.filters.jurusan = e.target.value;
       this.updateView();
     });
-    document.getElementById('filterSemester').addEventListener('change', (e) => {
-      this.filters.semester = e.target.value;
-      this.updateView();
-    });
     document.getElementById('filterGedung').addEventListener('change', (e) => {
       this.filters.gedung = e.target.value;
       this.updateView();
@@ -113,6 +149,7 @@ const Jadwal = {
       });
     });
 
+    // Cohort switcher
     document.getElementById('btnSelectSem2').addEventListener('click', () => {
       this.activeSemesterFocus = 2;
       this.renderPage();
@@ -122,6 +159,7 @@ const Jadwal = {
       this.renderPage();
     });
 
+    // Block period switcher
     const tabBlokA = document.getElementById('tabBlokA');
     if (tabBlokA) {
       tabBlokA.addEventListener('click', () => {
@@ -129,7 +167,6 @@ const Jadwal = {
         this.renderPage();
       });
     }
-
     const tabBlokB = document.getElementById('tabBlokB');
     if (tabBlokB) {
       tabBlokB.addEventListener('click', () => {
@@ -137,6 +174,18 @@ const Jadwal = {
         this.renderPage();
       });
     }
+
+    // Month navigation
+    document.getElementById('btnPrevMonth').addEventListener('click', () => this.changeMonth(-1));
+    document.getElementById('btnNextMonth').addEventListener('click', () => this.changeMonth(1));
+
+    // Week cards
+    document.querySelectorAll('.week-card').forEach(card => {
+      card.addEventListener('click', () => {
+        this.selectedWeek = parseInt(card.dataset.week);
+        this.renderPage();
+      });
+    });
 
     document.getElementById('btnAddJadwal').addEventListener('click', () => {
       this.editingId = null;
@@ -153,6 +202,14 @@ const Jadwal = {
         }
       });
     }
+  },
+
+  changeMonth(dir) {
+    this.currentMonth += dir;
+    if (this.currentMonth > 11) { this.currentMonth = 0; this.currentYear++; }
+    if (this.currentMonth < 0) { this.currentMonth = 11; this.currentYear--; }
+    this.selectedWeek = 1;
+    this.renderPage();
   },
 
   updateView() {

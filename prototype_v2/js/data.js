@@ -117,20 +117,78 @@ const DataStore = {
 
   // ---- Jadwal Kuliah ----
   jadwal: [
-    // Semester 4 (Reguler, full semester)
-    { id: 101, mata_kuliah_id: 27, kelas: 'A', dosen_id: 1, ruangan_id: 2, hari: 'Senin', jam_mulai: '08:00', jam_selesai: '10:00', jurusan_id: 1, semester: 4, status: 'Draft', is_gabungan: false },
-    { id: 102, mata_kuliah_id: 28, kelas: 'A', dosen_id: 3, ruangan_id: 3, hari: 'Selasa', jam_mulai: '10:00', jam_selesai: '12:00', jurusan_id: 1, semester: 4, status: 'Draft', is_gabungan: false },
-    
-    // Semester 2 (Blok A, Weeks 1-12)
-    // Note: weekly duration is doubled, e.g. 3 SKS becomes 6 SKS or 2 meetings of 3 hours, or a long 3-hour class twice a week. Let's make it 3 hours per meeting, e.g. 08:00 - 11:00.
-    { id: 201, mata_kuliah_id: 21, kelas: 'A', dosen_id: 2, ruangan_id: 1, hari: 'Rabu', jam_mulai: '08:00', jam_selesai: '11:00', jurusan_id: 1, semester: 2, status: 'Draft', is_gabungan: false },
-    { id: 202, mata_kuliah_id: 22, kelas: 'A', dosen_id: 4, ruangan_id: 1, hari: 'Kamis', jam_mulai: '08:00', jam_selesai: '11:00', jurusan_id: 1, semester: 2, status: 'Draft', is_gabungan: false },
+    // ============= SEMESTER 4 (Sistem Reguler) =============
+    // Senin
+    { id: 101, mata_kuliah_id: 27, kelas: 'A', dosen_id: 1, ruangan_id: 2, hari: 'Senin', jam_mulai: '08:00', jam_selesai: '10:00', jurusan_id: 1, semester: 4, status: 'Aktif', is_gabungan: false },
+    { id: 102, mata_kuliah_id: 28, kelas: 'A', dosen_id: 3, ruangan_id: 3, hari: 'Senin', jam_mulai: '10:00', jam_selesai: '12:00', jurusan_id: 1, semester: 4, status: 'Aktif', is_gabungan: false },
+    { id: 103, mata_kuliah_id: 29, kelas: 'B', dosen_id: 2, ruangan_id: 4, hari: 'Senin', jam_mulai: '13:00', jam_selesai: '15:00', jurusan_id: 1, semester: 4, status: 'Draft', is_gabungan: false },
+    { id: 104, mata_kuliah_id: 27, kelas: 'B', dosen_id: 5, ruangan_id: 6, hari: 'Senin', jam_mulai: '15:00', jam_selesai: '17:00', jurusan_id: 1, semester: 4, status: 'Aktif', is_gabungan: false },
+    { id: 105, mata_kuliah_id: 28, kelas: 'C', dosen_id: 4, ruangan_id: 7, hari: 'Senin', jam_mulai: '19:00', jam_selesai: '21:00', jurusan_id: 1, semester: 4, status: 'Draft', is_gabungan: false },
+    // Selasa
+    { id: 106, mata_kuliah_id: 29, kelas: 'A', dosen_id: 1, ruangan_id: 1, hari: 'Selasa', jam_mulai: '08:00', jam_selesai: '10:00', jurusan_id: 1, semester: 4, status: 'Aktif', is_gabungan: false },
+    { id: 107, mata_kuliah_id: 27, kelas: 'C', dosen_id: 3, ruangan_id: 5, hari: 'Selasa', jam_mulai: '10:00', jam_selesai: '12:00', jurusan_id: 1, semester: 4, status: 'Aktif', is_gabungan: false },
+    { id: 108, mata_kuliah_id: 28, kelas: 'B', dosen_id: 2, ruangan_id: 2, hari: 'Selasa', jam_mulai: '13:00', jam_selesai: '15:00', jurusan_id: 1, semester: 4, status: 'Draft', is_gabungan: false },
+    { id: 109, mata_kuliah_id: 29, kelas: 'C', dosen_id: 5, ruangan_id: 8, hari: 'Selasa', jam_mulai: '15:00', jam_selesai: '17:00', jurusan_id: 1, semester: 4, status: 'Aktif', is_gabungan: false },
+    // Rabu
+    { id: 110, mata_kuliah_id: 27, kelas: 'D', dosen_id: 4, ruangan_id: 3, hari: 'Rabu', jam_mulai: '08:00', jam_selesai: '10:00', jurusan_id: 1, semester: 4, status: 'Aktif', is_gabungan: false },
+    { id: 111, mata_kuliah_id: 29, kelas: 'D', dosen_id: 1, ruangan_id: 4, hari: 'Rabu', jam_mulai: '10:00', jam_selesai: '12:00', jurusan_id: 1, semester: 4, status: 'Draft', is_gabungan: false },
+    { id: 112, mata_kuliah_id: 28, kelas: 'D', dosen_id: 3, ruangan_id: 6, hari: 'Rabu', jam_mulai: '13:00', jam_selesai: '15:00', jurusan_id: 1, semester: 4, status: 'Aktif', is_gabungan: false },
+    { id: 113, mata_kuliah_id: 27, kelas: 'E', dosen_id: 5, ruangan_id: 9, hari: 'Rabu', jam_mulai: '15:00', jam_selesai: '17:00', jurusan_id: 1, semester: 4, status: 'Draft', is_gabungan: false },
+    // Kamis
+    { id: 114, mata_kuliah_id: 28, kelas: 'E', dosen_id: 2, ruangan_id: 1, hari: 'Kamis', jam_mulai: '08:00', jam_selesai: '10:00', jurusan_id: 1, semester: 4, status: 'Aktif', is_gabungan: false },
+    { id: 115, mata_kuliah_id: 29, kelas: 'E', dosen_id: 4, ruangan_id: 5, hari: 'Kamis', jam_mulai: '10:00', jam_selesai: '12:00', jurusan_id: 1, semester: 4, status: 'Aktif', is_gabungan: false },
+    { id: 116, mata_kuliah_id: 27, kelas: 'F', dosen_id: 1, ruangan_id: 7, hari: 'Kamis', jam_mulai: '13:00', jam_selesai: '15:00', jurusan_id: 1, semester: 4, status: 'Draft', is_gabungan: false },
+    { id: 117, mata_kuliah_id: 29, kelas: 'F', dosen_id: 3, ruangan_id: 10, hari: 'Kamis', jam_mulai: '19:00', jam_selesai: '21:00', jurusan_id: 1, semester: 4, status: 'Draft', is_gabungan: false },
+    // Jumat
+    { id: 118, mata_kuliah_id: 28, kelas: 'F', dosen_id: 5, ruangan_id: 2, hari: 'Jumat', jam_mulai: '08:00', jam_selesai: '10:00', jurusan_id: 1, semester: 4, status: 'Aktif', is_gabungan: false },
+    { id: 119, mata_kuliah_id: 27, kelas: 'G', dosen_id: 2, ruangan_id: 3, hari: 'Jumat', jam_mulai: '10:00', jam_selesai: '12:00', jurusan_id: 1, semester: 4, status: 'Aktif', is_gabungan: false },
+    { id: 120, mata_kuliah_id: 29, kelas: 'G', dosen_id: 4, ruangan_id: 11, hari: 'Jumat', jam_mulai: '13:00', jam_selesai: '15:00', jurusan_id: 1, semester: 4, status: 'Draft', is_gabungan: false },
+    // Sabtu
+    { id: 121, mata_kuliah_id: 28, kelas: 'G', dosen_id: 1, ruangan_id: 4, hari: 'Sabtu', jam_mulai: '08:00', jam_selesai: '10:00', jurusan_id: 1, semester: 4, status: 'Draft', is_gabungan: false },
+    { id: 122, mata_kuliah_id: 27, kelas: 'H', dosen_id: 3, ruangan_id: 8, hari: 'Sabtu', jam_mulai: '10:00', jam_selesai: '12:00', jurusan_id: 1, semester: 4, status: 'Aktif', is_gabungan: false },
 
-    // Semester 2 (Blok B, Weeks 13-24)
-    // Note: Sharing the SAME room R-1 (R-301) and SAME time as Blok A classes!
-    // Since Blok B is in different weeks than Blok A, this is perfectly valid and should not cause conflicts!
-    { id: 203, mata_kuliah_id: 24, kelas: 'A', dosen_id: 2, ruangan_id: 1, hari: 'Rabu', jam_mulai: '08:00', jam_selesai: '11:00', jurusan_id: 1, semester: 2, status: 'Draft', is_gabungan: false },
-    { id: 204, mata_kuliah_id: 25, kelas: 'A', dosen_id: 4, ruangan_id: 1, hari: 'Kamis', jam_mulai: '08:00', jam_selesai: '11:00', jurusan_id: 1, semester: 2, status: 'Draft', is_gabungan: false },
+    // ============= SEMESTER 2 (Sistem Blok A, Bulan 1-3) =============
+    // Senin
+    { id: 201, mata_kuliah_id: 21, kelas: 'A', dosen_id: 2, ruangan_id: 1, hari: 'Senin', jam_mulai: '08:00', jam_selesai: '11:00', jurusan_id: 1, semester: 2, status: 'Aktif', is_gabungan: false },
+    { id: 202, mata_kuliah_id: 22, kelas: 'A', dosen_id: 4, ruangan_id: 5, hari: 'Senin', jam_mulai: '11:00', jam_selesai: '14:00', jurusan_id: 1, semester: 2, status: 'Aktif', is_gabungan: false },
+    { id: 203, mata_kuliah_id: 23, kelas: 'A', dosen_id: 6, ruangan_id: 10, hari: 'Senin', jam_mulai: '14:00', jam_selesai: '17:00', jurusan_id: 1, semester: 2, status: 'Draft', is_gabungan: false },
+    // Selasa
+    { id: 204, mata_kuliah_id: 21, kelas: 'B', dosen_id: 3, ruangan_id: 2, hari: 'Selasa', jam_mulai: '08:00', jam_selesai: '11:00', jurusan_id: 1, semester: 2, status: 'Aktif', is_gabungan: false },
+    { id: 205, mata_kuliah_id: 22, kelas: 'B', dosen_id: 5, ruangan_id: 6, hari: 'Selasa', jam_mulai: '11:00', jam_selesai: '14:00', jurusan_id: 1, semester: 2, status: 'Draft', is_gabungan: false },
+    { id: 206, mata_kuliah_id: 23, kelas: 'B', dosen_id: 7, ruangan_id: 11, hari: 'Selasa', jam_mulai: '14:00', jam_selesai: '17:00', jurusan_id: 1, semester: 2, status: 'Aktif', is_gabungan: false },
+    // Rabu
+    { id: 207, mata_kuliah_id: 21, kelas: 'C', dosen_id: 2, ruangan_id: 3, hari: 'Rabu', jam_mulai: '08:00', jam_selesai: '11:00', jurusan_id: 1, semester: 2, status: 'Aktif', is_gabungan: false },
+    { id: 208, mata_kuliah_id: 22, kelas: 'C', dosen_id: 8, ruangan_id: 7, hari: 'Rabu', jam_mulai: '11:00', jam_selesai: '14:00', jurusan_id: 1, semester: 2, status: 'Aktif', is_gabungan: false },
+    // Kamis
+    { id: 209, mata_kuliah_id: 23, kelas: 'C', dosen_id: 4, ruangan_id: 1, hari: 'Kamis', jam_mulai: '08:00', jam_selesai: '11:00', jurusan_id: 1, semester: 2, status: 'Draft', is_gabungan: false },
+    { id: 210, mata_kuliah_id: 21, kelas: 'D', dosen_id: 6, ruangan_id: 4, hari: 'Kamis', jam_mulai: '11:00', jam_selesai: '14:00', jurusan_id: 1, semester: 2, status: 'Aktif', is_gabungan: false },
+    // Jumat
+    { id: 211, mata_kuliah_id: 22, kelas: 'D', dosen_id: 3, ruangan_id: 9, hari: 'Jumat', jam_mulai: '08:00', jam_selesai: '11:00', jurusan_id: 1, semester: 2, status: 'Aktif', is_gabungan: false },
+    { id: 212, mata_kuliah_id: 23, kelas: 'D', dosen_id: 5, ruangan_id: 12, hari: 'Jumat', jam_mulai: '11:00', jam_selesai: '14:00', jurusan_id: 1, semester: 2, status: 'Draft', is_gabungan: false },
+    // Sabtu
+    { id: 213, mata_kuliah_id: 21, kelas: 'E', dosen_id: 7, ruangan_id: 13, hari: 'Sabtu', jam_mulai: '08:00', jam_selesai: '11:00', jurusan_id: 1, semester: 2, status: 'Aktif', is_gabungan: false },
+
+    // ============= SEMESTER 2 (Sistem Blok B, Bulan 4-6) =============
+    // Shares same slots as Blok A (valid, different block period)
+    // Senin
+    { id: 301, mata_kuliah_id: 24, kelas: 'A', dosen_id: 2, ruangan_id: 1, hari: 'Senin', jam_mulai: '08:00', jam_selesai: '11:00', jurusan_id: 1, semester: 2, status: 'Aktif', is_gabungan: false },
+    { id: 302, mata_kuliah_id: 25, kelas: 'A', dosen_id: 4, ruangan_id: 5, hari: 'Senin', jam_mulai: '11:00', jam_selesai: '14:00', jurusan_id: 1, semester: 2, status: 'Aktif', is_gabungan: false },
+    { id: 303, mata_kuliah_id: 26, kelas: 'A', dosen_id: 6, ruangan_id: 10, hari: 'Senin', jam_mulai: '14:00', jam_selesai: '17:00', jurusan_id: 1, semester: 2, status: 'Draft', is_gabungan: false },
+    // Selasa
+    { id: 304, mata_kuliah_id: 24, kelas: 'B', dosen_id: 3, ruangan_id: 2, hari: 'Selasa', jam_mulai: '08:00', jam_selesai: '11:00', jurusan_id: 1, semester: 2, status: 'Aktif', is_gabungan: false },
+    { id: 305, mata_kuliah_id: 25, kelas: 'B', dosen_id: 5, ruangan_id: 6, hari: 'Selasa', jam_mulai: '11:00', jam_selesai: '14:00', jurusan_id: 1, semester: 2, status: 'Draft', is_gabungan: false },
+    { id: 306, mata_kuliah_id: 26, kelas: 'B', dosen_id: 7, ruangan_id: 11, hari: 'Selasa', jam_mulai: '14:00', jam_selesai: '17:00', jurusan_id: 1, semester: 2, status: 'Aktif', is_gabungan: false },
+    // Rabu
+    { id: 307, mata_kuliah_id: 24, kelas: 'C', dosen_id: 2, ruangan_id: 3, hari: 'Rabu', jam_mulai: '08:00', jam_selesai: '11:00', jurusan_id: 1, semester: 2, status: 'Aktif', is_gabungan: false },
+    { id: 308, mata_kuliah_id: 25, kelas: 'C', dosen_id: 8, ruangan_id: 7, hari: 'Rabu', jam_mulai: '11:00', jam_selesai: '14:00', jurusan_id: 1, semester: 2, status: 'Aktif', is_gabungan: false },
+    // Kamis
+    { id: 309, mata_kuliah_id: 26, kelas: 'C', dosen_id: 4, ruangan_id: 1, hari: 'Kamis', jam_mulai: '08:00', jam_selesai: '11:00', jurusan_id: 1, semester: 2, status: 'Draft', is_gabungan: false },
+    { id: 310, mata_kuliah_id: 24, kelas: 'D', dosen_id: 6, ruangan_id: 4, hari: 'Kamis', jam_mulai: '11:00', jam_selesai: '14:00', jurusan_id: 1, semester: 2, status: 'Aktif', is_gabungan: false },
+    // Jumat
+    { id: 311, mata_kuliah_id: 25, kelas: 'D', dosen_id: 3, ruangan_id: 9, hari: 'Jumat', jam_mulai: '08:00', jam_selesai: '11:00', jurusan_id: 1, semester: 2, status: 'Aktif', is_gabungan: false },
+    { id: 312, mata_kuliah_id: 26, kelas: 'D', dosen_id: 5, ruangan_id: 12, hari: 'Jumat', jam_mulai: '11:00', jam_selesai: '14:00', jurusan_id: 1, semester: 2, status: 'Draft', is_gabungan: false },
+    // Sabtu
+    { id: 313, mata_kuliah_id: 24, kelas: 'E', dosen_id: 7, ruangan_id: 13, hari: 'Sabtu', jam_mulai: '08:00', jam_selesai: '11:00', jurusan_id: 1, semester: 2, status: 'Aktif', is_gabungan: false },
   ],
 
   // ---- Preferensi Dosen ----
