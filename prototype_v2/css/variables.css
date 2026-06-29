@@ -1,0 +1,103 @@
+/* ============================================
+   Design Tokens - Snowflake Design System
+   Academic Schedule Management System
+   ============================================ */
+
+:root {
+  /* ---- Brand Colors ---- */
+  --color-primary: #29B5E8;
+  --color-primary-hover: #1E9BCB;
+  --color-primary-deep: #11567F;
+  --color-primary-subtle: #E5F6FC;
+  --color-on-primary: #FFFFFF;
+
+  /* ---- Surfaces ---- */
+  --color-canvas: #FFFFFF;
+  --color-surface-1: #F5F8FA;
+  --color-surface-2: #E8EEF2;
+  --color-border: #D5DEE5;
+  --color-border-subtle: #E8EEF2;
+
+  /* ---- Text ---- */
+  --color-ink: #1A2B3C;
+  --color-ink-muted: #5B6B7B;
+  --color-ink-subdued: #8A98A6;
+  --color-mono-ink: #11567F;
+
+  /* ---- Semantic ---- */
+  --color-success: #1E8E5A;
+  --color-success-bg: #E8F5EE;
+  --color-warning: #C77700;
+  --color-warning-bg: #FFF3E0;
+  --color-error: #D6402C;
+  --color-error-bg: #FDECEA;
+
+  /* ---- Typography ---- */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+  --font-mono: 'Roboto Mono', SFMono-Regular, Menlo, Consolas, monospace;
+
+  --text-xs: 11px;
+  --text-sm: 12px;
+  --text-base: 13px;
+  --text-md: 14px;
+  --text-lg: 16px;
+  --text-xl: 18px;
+  --text-2xl: 20px;
+  --text-3xl: 24px;
+  --text-4xl: 32px;
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  --leading-tight: 1.2;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.6;
+
+  /* ---- Spacing (8px base) ---- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-14: 56px;
+  --space-20: 80px;
+
+  /* ---- Radius ---- */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --radius-pill: 9999px;
+
+  /* ---- Shadows ---- */
+  --shadow-card: 0 1px 3px rgba(26, 43, 60, 0.08);
+  --shadow-elevated: 0 4px 16px rgba(26, 43, 60, 0.12);
+  --shadow-modal: 0 8px 32px rgba(26, 43, 60, 0.20);
+
+  /* ---- Motion ---- */
+  --duration-fast: 100ms;
+  --duration-base: 200ms;
+  --easing: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ---- Layout ---- */
+  --sidebar-width: 240px;
+  --sidebar-collapsed: 56px;
+  --header-height: 56px;
+  --content-max-width: 1400px;
+
+  /* ---- Jurusan Colors (Calendar & Rolling) ---- */
+  --color-jurusan-ti: #29B5E8;
+  --color-jurusan-si: #1E8E5A;
+  --color-jurusan-te: #C77700;
+  --color-jurusan-ts: #8B5CF6;
+  --color-jurusan-mj: #D6402C;
+  --color-jurusan-ak: #0EA5E9;
+  --color-jurusan-ik: #F59E0B;
+  --color-jurusan-ps: #EC4899;
+  --color-jurusan-hk: #6366F1;
+  --color-jurusan-kd: #14B8A6;
+}
