@@ -7,6 +7,7 @@ const Jadwal = {
   viewMode: 'kalender', // kalender | ruangan | dosen | jurusan | hari
   editingId: null,
   activeSemesterFocus: 2, // 2 | 4
+  activeSystem: 'Blok', // 'Blok' | 'Non-Blok'
   activeBlockPeriod: 'Blok A', // 'Blok A' | 'Blok B'
   selectedWeek: 2,
   currentMonth: 5, // June
@@ -19,13 +20,28 @@ const Jadwal = {
     return (monthOffset * 4) + this.selectedWeek;
   },
 
+  adjustSemesterFocus() {
+    const activeSemester = DataStore.semester.find(s => s.is_aktif) || DataStore.semester[0];
+    const isGanjil = activeSemester.jenis === 'Ganjil';
+    if (isGanjil) {
+      this.activeSemesterFocus = this.activeSystem === 'Blok' ? 1 : 3;
+    } else {
+      this.activeSemesterFocus = this.activeSystem === 'Blok' ? 2 : 4;
+    }
+  },
+
   render(container) {
     this.container = container;
+    this.adjustSemesterFocus();
     this.renderPage();
   },
 
   renderPage() {
     const filtered = this.getFiltered();
+    const activeSemester = DataStore.semester.find(s => s.is_aktif) || DataStore.semester[0];
+    const isGanjil = activeSemester.jenis === 'Ganjil';
+    const targetSem = this.activeSemesterFocus;
+
     const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
     const monthName = months[this.currentMonth];
     const weeks = [
@@ -36,22 +52,29 @@ const Jadwal = {
       { num: 5, label: '29-31' },
     ];
 
+    const blockRanges = DataStore.getBlockRanges();
+
     this.container.innerHTML = `
       <div class="page-content-inner">
         <!-- Cohort Switcher (Tingkat 1) -->
         <div style="display: flex; justify-content: center; margin-bottom: var(--space-3)">
           <div class="view-toggle" style="padding: 4px; border-radius: var(--radius-lg)">
-            <button class="view-toggle-btn ${this.activeSemesterFocus === 2 ? 'active' : ''}" style="padding: var(--space-2) var(--space-4)" id="btnSelectSem2">Sistem Blok</button>
-            <button class="view-toggle-btn ${this.activeSemesterFocus === 4 ? 'active' : ''}" style="padding: var(--space-2) var(--space-4)" id="btnSelectSem4">Sistem Non-Blok (Reguler)</button>
+            <button class="view-toggle-btn ${this.activeSystem === 'Blok' ? 'active' : ''}" style="padding: var(--space-2) var(--space-4)" id="btnSelectSistemBlok">Sistem Blok</button>
+            <button class="view-toggle-btn ${this.activeSystem === 'Non-Blok' ? 'active' : ''}" style="padding: var(--space-2) var(--space-4)" id="btnSelectSistemNonBlok">Sistem Non-Blok (Reguler)</button>
           </div>
         </div>
 
         <!-- Period Switcher (Tingkat 2 - Only for Blok) -->
-        ${this.activeSemesterFocus === 2 ? `
-          <div style="display: flex; justify-content: center; margin-bottom: var(--space-3)">
+        ${(this.activeSystem === 'Blok') ? `
+          <div style="display: flex; justify-content: center; margin-bottom: var(--space-2)">
             <div class="view-toggle" style="padding: 2px; border-radius: var(--radius-md); background: var(--color-surface-2)">
               <button class="view-toggle-btn btn-sm ${this.activeBlockPeriod === 'Blok A' ? 'active' : ''}" style="padding: var(--space-1) var(--space-3); font-size: var(--text-xs)" id="tabBlokA">Blok A (Bulan 1-3)</button>
               <button class="view-toggle-btn btn-sm ${this.activeBlockPeriod === 'Blok B' ? 'active' : ''}" style="padding: var(--space-1) var(--space-3); font-size: var(--text-xs)" id="tabBlokB">Blok B (Bulan 4-6)</button>
+            </div>
+          </div>
+          <div style="display: flex; justify-content: center; margin-bottom: var(--space-4)">
+            <div style="font-size: var(--text-xs); font-weight: var(--weight-medium); color: var(--color-ink-muted); padding: var(--space-1) var(--space-3); border-radius: var(--radius-sm); border: 1px solid var(--color-border-subtle); background: var(--color-surface-1)">
+              Rentang Tanggal ${this.activeBlockPeriod}: <strong>${this.activeBlockPeriod === 'Blok A' ? blockRanges.blokA.formatted : blockRanges.blokB.formatted}</strong>
             </div>
           </div>
         ` : ''}
@@ -66,6 +89,10 @@ const Jadwal = {
               <div style="font-weight: var(--weight-semibold); font-size: var(--text-lg); min-width: 180px; text-align: center">${monthName} ${this.currentYear}</div>
               <button class="btn btn-ghost btn-icon btn-sm" id="btnNextMonth" title="Bulan berikutnya">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+              </button>
+              <button class="btn btn-ghost btn-sm" id="btnOpenDateConfig" style="margin-left: var(--space-2); display: flex; align-items: center; gap: 4px">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                Pengaturan Tanggal
               </button>
             </div>
           </div>
@@ -113,7 +140,11 @@ const Jadwal = {
               <button class="view-toggle-btn ${this.viewMode === 'ruangan' ? 'active' : ''}" data-view="ruangan">Ruangan</button>
               <button class="view-toggle-btn ${this.viewMode === 'dosen' ? 'active' : ''}" data-view="dosen">Dosen</button>
             </div>
-            <button class="btn" id="btnAutoRolling" style="background: var(--color-primary-deep); color: white;">Auto-Rolling Semester 1</button>
+            ${this.activeSystem === 'Blok' ? `
+              <button class="btn btn-primary" id="btnAutoRolling">Auto-Rolling ${this.activeBlockPeriod}</button>
+            ` : `
+              <button class="btn btn-primary" id="btnAutoRolling">Auto-Rolling Semester</button>
+            `}
             <button class="btn btn-primary" id="btnAddJadwal">+ Tambah Jadwal</button>
           </div>
         </div>
@@ -127,6 +158,10 @@ const Jadwal = {
   },
 
   bindEvents() {
+    const activeSemester = DataStore.semester.find(s => s.is_aktif) || DataStore.semester[0];
+    const isGanjil = activeSemester.jenis === 'Ganjil';
+    const targetSem = isGanjil ? 1 : 2;
+
     document.getElementById('jadwalSearch').addEventListener('input', (e) => {
       this.filters.search = e.target.value;
       this.updateView();
@@ -150,14 +185,22 @@ const Jadwal = {
     });
 
     // Cohort switcher
-    document.getElementById('btnSelectSem2').addEventListener('click', () => {
-      this.activeSemesterFocus = 2;
-      this.renderPage();
-    });
-    document.getElementById('btnSelectSem4').addEventListener('click', () => {
-      this.activeSemesterFocus = 4;
-      this.renderPage();
-    });
+    const btnSelectSistemBlok = document.getElementById('btnSelectSistemBlok');
+    if (btnSelectSistemBlok) {
+      btnSelectSistemBlok.addEventListener('click', () => {
+        this.activeSystem = 'Blok';
+        this.adjustSemesterFocus();
+        this.renderPage();
+      });
+    }
+    const btnSelectSistemNonBlok = document.getElementById('btnSelectSistemNonBlok');
+    if (btnSelectSistemNonBlok) {
+      btnSelectSistemNonBlok.addEventListener('click', () => {
+        this.activeSystem = 'Non-Blok';
+        this.adjustSemesterFocus();
+        this.renderPage();
+      });
+    }
 
     // Block period switcher
     const tabBlokA = document.getElementById('tabBlokA');
@@ -174,6 +217,16 @@ const Jadwal = {
         this.renderPage();
       });
     }
+
+    // Date Configuration
+    const btnOpenDateConfig = document.getElementById('btnOpenDateConfig');
+    if (btnOpenDateConfig) {
+      btnOpenDateConfig.addEventListener('click', () => {
+        this.openDateConfig();
+      });
+    }
+
+    // Rolling Ruangan
 
     // Month navigation
     document.getElementById('btnPrevMonth').addEventListener('click', () => this.changeMonth(-1));
@@ -195,9 +248,18 @@ const Jadwal = {
     const btnAutoRolling = document.getElementById('btnAutoRolling');
     if (btnAutoRolling) {
       btnAutoRolling.addEventListener('click', () => {
-        if (confirm('Apakah Anda ingin menjadwalkan ulang (auto-rolling) seluruh kelas Semester 1? Tindakan ini akan menghapus jadwal Semester 1 saat ini dan membuat jadwal baru secara otomatis bebas dari konflik ruangan dan dosen.')) {
-          const count = DataStore.generateSemesterSchedule(1);
-          App.toast(`Berhasil melakukan rolling! ${count} kelas Semester 1 otomatis dijadwalkan tanpa konflik.`);
+        const isBlock = this.activeSystem === 'Blok';
+        const blockPeriod = isBlock ? this.activeBlockPeriod : null;
+        const msg = isBlock 
+          ? `Apakah Anda ingin menjadwalkan ulang (auto-rolling) seluruh kelas untuk ${this.activeBlockPeriod}? Tindakan ini akan menghapus jadwal ${this.activeBlockPeriod} saat ini dan membuat jadwal baru secara otomatis bebas dari konflik ruangan dan dosen.`
+          : `Apakah Anda ingin menjadwalkan ulang (auto-rolling) seluruh kelas Semester ini? Tindakan ini akan menghapus jadwal Semester saat ini dan membuat jadwal baru secara otomatis bebas dari konflik ruangan dan dosen.`;
+        
+        if (confirm(msg)) {
+          const count = DataStore.generateSemesterSchedule(targetSem, blockPeriod);
+          const toastMsg = isBlock 
+            ? `Berhasil melakukan rolling! ${count} kelas ${this.activeBlockPeriod} otomatis dijadwalkan tanpa konflik.`
+            : `Berhasil melakukan rolling! ${count} kelas Semester otomatis dijadwalkan tanpa konflik.`;
+          App.toast(toastMsg);
           this.updateView();
         }
       });
@@ -617,6 +679,10 @@ const Jadwal = {
     const defaultJamSelesai = jadwal?.jam_selesai || presetJamSelesai || '10:00';
     const defaultSemester = jadwal?.semester || this.activeSemesterFocus || 2;
 
+    const activeSem = DataStore.semester.find(s => s.is_aktif) || DataStore.semester[0];
+    const isGanjil = activeSem.jenis === 'Ganjil';
+    const semestersToShow = isGanjil ? [1, 3, 5, 7] : [2, 4, 6, 8];
+
     modal.innerHTML = `
       <div class="modal modal-wide">
         <div class="modal-header">
@@ -635,7 +701,7 @@ const Jadwal = {
             <div class="form-group">
               <label class="form-label">Semester <span class="required">*</span></label>
               <select class="form-select" id="formSemester">
-                ${[1,2,3,4,5,6,7,8].map(s => `<option value="${s}" ${defaultSemester === s ? 'selected' : ''}>${s}</option>`).join('')}
+                ${semestersToShow.map(s => `<option value="${s}" ${defaultSemester === s ? 'selected' : ''}>${s}</option>`).join('')}
               </select>
             </div>
           </div>
@@ -644,7 +710,6 @@ const Jadwal = {
               <label class="form-label">Mata Kuliah <span class="required">*</span></label>
               <select class="form-select" id="formMataKuliah">
                 <option value="">Pilih Mata Kuliah</option>
-                ${DataStore.mataKuliah.map(m => `<option value="${m.id}" ${jadwal?.mata_kuliah_id === m.id ? 'selected' : ''}>${m.nama} (${m.kode}) [${m.jenis_penjadwalan}]</option>`).join('')}
               </select>
             </div>
             <div class="form-group">
@@ -834,11 +899,27 @@ const Jadwal = {
       updateRuanganStatus();
     };
 
+    const updateMataKuliahSelect = () => {
+      const selectedSemester = parseInt(document.getElementById('formSemester').value);
+      const mkSelect = document.getElementById('formMataKuliah');
+      if (!mkSelect) return;
+      
+      const filteredMK = DataStore.mataKuliah.filter(m => m.semester === selectedSemester);
+      const currentMkId = jadwal ? jadwal.mata_kuliah_id : null;
+
+      mkSelect.innerHTML = '<option value="">Pilih Mata Kuliah</option>' + 
+        filteredMK.map(m => `<option value="${m.id}" ${currentMkId === m.id ? 'selected' : ''}>${m.nama} (${m.kode}) [${m.jenis_penjadwalan}]</option>`).join('');
+    };
+
     // Events
     document.getElementById('closeJadwalModal').addEventListener('click', () => App.closeModal('jadwalModal'));
     document.getElementById('cancelJadwalModal').addEventListener('click', () => App.closeModal('jadwalModal'));
 
     // Dynamic bindings
+    document.getElementById('formSemester').addEventListener('change', () => {
+      updateMataKuliahSelect();
+      updateAutoDuration();
+    });
     document.getElementById('formDosen').addEventListener('change', () => {
       this.showPreference();
       updateDosenStatus();
@@ -865,12 +946,14 @@ const Jadwal = {
     document.getElementById('saveJadwal').addEventListener('click', () => this.saveForm());
 
     // Initialize lists
+    updateMataKuliahSelect();
     updateDosenAndRuanganLists();
   },
 
   showPreference() {
     const dosenId = parseInt(document.getElementById('formDosen').value);
-    const pref = DataStore.preferensi.find(p => p.dosen_id === dosenId);
+    const activeSemester = DataStore.semester.find(s => s.is_aktif) || DataStore.semester[0];
+    const pref = DataStore.preferensi.find(p => p.dosen_id === dosenId && p.semester_id === activeSemester.id);
     const display = document.getElementById('prefDisplay');
     if (!display) return;
 
@@ -965,5 +1048,198 @@ const Jadwal = {
 
     App.closeModal('jadwalModal');
     this.updateView();
+  },
+
+  openDateConfig() {
+    let modal = document.getElementById('dateConfigModal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'dateConfigModal';
+      modal.className = 'modal-overlay';
+      document.body.appendChild(modal);
+    }
+    
+    modal.innerHTML = `
+      <div class="modal">
+        <div class="modal-header">
+          <h3>Pengaturan Tanggal Semester</h3>
+          <button class="modal-close" onclick="App.closeModal('dateConfigModal')">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group" style="margin-bottom: var(--space-4)">
+            <label class="form-label">Tanggal Mulai Semester <span class="required">*</span></label>
+            <input type="date" class="form-input" id="cfgTanggalMulai" value="${DataStore.semesterConfig.tanggal_mulai}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Durasi per Blok (Minggu) <span class="required">*</span></label>
+            <input type="number" class="form-input" id="cfgWeeksPerBlock" value="${DataStore.semesterConfig.weeks_per_block}" min="1" max="24">
+          </div>
+          <div id="cfgPreview" style="margin-top: var(--space-4); padding: var(--space-3); background: var(--color-surface-1); border-radius: var(--radius-md); font-size: var(--text-xs); color: var(--color-ink-muted)">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" onclick="App.closeModal('dateConfigModal')">Batal</button>
+          <button class="btn btn-primary" id="btnSaveDateConfig">Simpan Pengaturan</button>
+        </div>
+      </div>
+    `;
+    
+    App.openModal('dateConfigModal');
+    
+    const updatePreview = () => {
+      const startVal = document.getElementById('cfgTanggalMulai').value;
+      const weeksVal = parseInt(document.getElementById('cfgWeeksPerBlock').value);
+      if (!startVal || isNaN(weeksVal)) return;
+      
+      const start = new Date(startVal);
+      
+      const endA = new Date(start);
+      endA.setDate(start.getDate() + (weeksVal * 7) - 1);
+      
+      const startB = new Date(endA);
+      startB.setDate(endA.getDate() + 1);
+      const endB = new Date(startB);
+      endB.setDate(startB.getDate() + (weeksVal * 7) - 1);
+      
+      const formatDate = (d) => {
+        return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+      };
+      
+      document.getElementById('cfgPreview').innerHTML = `
+        <strong>Estimasi Rentang Tanggal:</strong><br>
+        • Blok A: ${formatDate(start)} s/d ${formatDate(endA)} (Minggu 1-${weeksVal})<br>
+        • Blok B: ${formatDate(startB)} s/d ${formatDate(endB)} (Minggu ${weeksVal + 1}-${weeksVal * 2})
+      `;
+    };
+    
+    updatePreview();
+    
+    document.getElementById('cfgTanggalMulai').addEventListener('change', updatePreview);
+    document.getElementById('cfgWeeksPerBlock').addEventListener('input', updatePreview);
+    
+    document.getElementById('btnSaveDateConfig').addEventListener('click', () => {
+      const startVal = document.getElementById('cfgTanggalMulai').value;
+      const weeksVal = parseInt(document.getElementById('cfgWeeksPerBlock').value);
+      if (!startVal || isNaN(weeksVal)) {
+        App.toast('Lengkapi semua data.', 'error');
+        return;
+      }
+      DataStore.semesterConfig.tanggal_mulai = startVal;
+      DataStore.semesterConfig.weeks_per_block = weeksVal;
+      App.closeModal('dateConfigModal');
+      App.toast('Rentang tanggal semester berhasil diperbarui.');
+      this.renderPage();
+    });
+  },
+
+  runRollingRuangan() {
+    const activeSemester = DataStore.semester.find(s => s.is_aktif) || DataStore.semester[0];
+    const targetBlock = this.activeSystem === 'Blok' ? this.activeBlockPeriod : 'Reguler';
+    
+    // Run room rolling for each day of week
+    const allResults = [];
+    DataStore.hari.forEach(hari => {
+      const dayResults = DataStore.rollingRooms(hari, targetBlock);
+      allResults.push(...dayResults.map(r => ({ ...r, hari })));
+    });
+    
+    // Commit the results to the schedule database
+    DataStore.commitRollingResults(allResults);
+    
+    // Show summary modal
+    this.openRollingSummaryModal(allResults, targetBlock, activeSemester);
+  },
+
+  openRollingSummaryModal(results, targetBlock, activeSemester) {
+    let modal = document.getElementById('rollingSummaryModal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'rollingSummaryModal';
+      modal.className = 'modal-overlay';
+      document.body.appendChild(modal);
+    }
+    
+    const berhasil = results.filter(r => r.status === 'Terisi' || r.status === 'Dipindahkan').length;
+    const konflik = results.filter(r => r.status === 'Konflik').length;
+    const dipindahkan = results.filter(r => r.status === 'Dipindahkan').length;
+    
+    modal.innerHTML = `
+      <div class="modal modal-wide">
+        <div class="modal-header">
+          <h3>Ringkasan Hasil Rolling Ruangan</h3>
+          <button class="modal-close" onclick="App.closeModal('rollingSummaryModal')">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div style="margin-bottom: var(--space-4); font-size: var(--text-sm)">
+            Target Rolling: <strong>Semester ${activeSemester.tahun_ajaran} ${activeSemester.jenis} (${targetBlock})</strong>
+          </div>
+          
+          <div class="rolling-summary" style="display: flex; gap: var(--space-4); margin-bottom: var(--space-4)">
+            <div class="rolling-summary-item" style="flex: 1; padding: var(--space-3); background: var(--color-surface-2); border-radius: var(--radius-md); text-align: center">
+              <span class="rolling-summary-num" style="display: block; font-size: var(--text-2xl); font-weight: var(--weight-bold); color: var(--color-success)">${berhasil}</span>
+              <span style="font-size: var(--text-xs); color: var(--color-ink-muted)">Berhasil Ditempatkan</span>
+            </div>
+            <div class="rolling-summary-item" style="flex: 1; padding: var(--space-3); background: var(--color-surface-2); border-radius: var(--radius-md); text-align: center">
+              <span class="rolling-summary-num" style="display: block; font-size: var(--text-2xl); font-weight: var(--weight-bold); color: var(--color-warning)">${dipindahkan}</span>
+              <span style="font-size: var(--text-xs); color: var(--color-ink-muted)">Dipindahkan Ruangan</span>
+            </div>
+            <div class="rolling-summary-item" style="flex: 1; padding: var(--space-3); background: var(--color-surface-2); border-radius: var(--radius-md); text-align: center">
+              <span class="rolling-summary-num" style="display: block; font-size: var(--text-2xl); font-weight: var(--weight-bold); color: ${konflik > 0 ? 'var(--color-error)' : 'var(--color-ink-muted)'}">${konflik}</span>
+              <span style="font-size: var(--text-xs); color: var(--color-ink-muted)">Bentrok / Tanpa Ruang</span>
+            </div>
+          </div>
+          
+          ${konflik > 0 ? `
+            <div class="alert alert-error" style="margin-bottom: var(--space-4)">
+              <span class="alert-icon">!</span>
+              <div>
+                <strong>Perhatian:</strong> Terdapat ${konflik} jadwal bentrok yang tidak mendapatkan ruangan kosong. Harap sesuaikan jadwal tersebut secara manual.
+              </div>
+            </div>
+            
+            <div style="font-size: var(--text-sm); font-weight: var(--weight-semibold); margin-bottom: var(--space-2)">Detail Bentrok:</div>
+            <div class="table-container" style="max-height: 200px; overflow-y: auto">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Hari</th>
+                    <th>Jam</th>
+                    <th>Mata Kuliah</th>
+                    <th>Dosen</th>
+                    <th>Aksi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${results.filter(r => r.status === 'Konflik').map(r => {
+                    const mk = DataStore.getMataKuliah(r.jadwal.mata_kuliah_id);
+                    return `
+                      <tr>
+                        <td>${r.hari}</td>
+                        <td class="mono">${r.jadwal.jam_mulai} - ${r.jadwal.jam_selesai}</td>
+                        <td><strong>${mk?.nama || '-'} (${r.jadwal.kelas})</strong></td>
+                        <td>${r.dosen?.nama?.split(',')[0] || '-'}</td>
+                        <td>
+                          <button class="btn btn-secondary btn-sm" onclick="App.closeModal('rollingSummaryModal'); Jadwal.editingId=${r.jadwal.id}; Jadwal.openForm()">Resolusi Manual</button>
+                        </td>
+                      </tr>
+                    `;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>
+          ` : `
+            <div class="alert alert-success">
+              <span class="alert-icon">&#10003;</span>
+              <strong>Berhasil:</strong> Seluruh kelas telah berhasil ditempatkan ke dalam ruangan yang kosong dan sesuai preferensi dosen tanpa bentrok!
+            </div>
+          `}
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-primary" onclick="App.closeModal('rollingSummaryModal'); Jadwal.updateView()">Selesai & Terapkan</button>
+        </div>
+      </div>
+    `;
+    
+    App.openModal('rollingSummaryModal');
   },
 };

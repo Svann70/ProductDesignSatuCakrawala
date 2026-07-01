@@ -7,9 +7,20 @@ const Rolling = {
   selectedWeek: 1,
   currentMonth: new Date().getMonth(),
   currentYear: new Date().getFullYear(),
+  activeBlock: null, // 'Blok A' | 'Blok B' | 'Reguler'
 
   render(container) {
     this.results = [];
+    const activeSemester = DataStore.semester.find(s => s.is_aktif) || DataStore.semester[0];
+    const isGanjil = activeSemester.jenis === 'Ganjil';
+
+    // Ensure activeBlock is valid for the current semester type
+    if (isGanjil) {
+      this.activeBlock = 'Reguler';
+    } else if (this.activeBlock !== 'Blok A' && this.activeBlock !== 'Blok B') {
+      this.activeBlock = 'Blok A';
+    }
+
     const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
     const monthName = months[this.currentMonth];
     const now = new Date();
@@ -37,9 +48,10 @@ const Rolling = {
               <button class="btn btn-ghost btn-icon btn-sm" onclick="Rolling.changeMonth(1)" title="Bulan berikutnya">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
               </button>
-              <span class="badge badge-info" style="margin-left: var(--space-2)">${DataStore.semester[0].tahun_ajaran} ${DataStore.semester[0].jenis}</span>
+              <span class="badge badge-info" style="margin-left: var(--space-2)">${activeSemester.tahun_ajaran} ${activeSemester.jenis}</span>
             </div>
           </div>
+
           <!-- Week Cards -->
           <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--space-2)">
             ${weeks.map(w => {
@@ -65,9 +77,32 @@ const Rolling = {
           </div>
         </div>
 
+        <!-- Block Switcher for Genap / Reguler Alert for Ganjil -->
+        ${!isGanjil ? `
+          <div style="display: flex; justify-content: center; margin-bottom: var(--space-2)">
+            <div class="view-toggle" style="padding: 4px; border-radius: var(--radius-lg)">
+              <button class="view-toggle-btn ${this.activeBlock === 'Blok A' ? 'active' : ''}" style="padding: var(--space-2) var(--space-4)" onclick="Rolling.setActiveBlock('Blok A')">Rolling Blok A (Bulan 1-3)</button>
+              <button class="view-toggle-btn ${this.activeBlock === 'Blok B' ? 'active' : ''}" style="padding: var(--space-2) var(--space-4)" onclick="Rolling.setActiveBlock('Blok B')">Rolling Blok B (Bulan 4-6)</button>
+            </div>
+          </div>
+          <div style="display: flex; justify-content: center; margin-bottom: var(--space-4)">
+            <div style="font-size: var(--text-xs); font-weight: var(--weight-medium); color: var(--color-ink-muted); padding: var(--space-1) var(--space-3); border-radius: var(--radius-sm); border: 1px solid var(--color-border-subtle); background: var(--color-surface-1)">
+              ${this.activeBlock === 'Blok A' 
+                ? 'Rentang Tanggal Blok A: 2 Maret 2026 s/d 24 Mei 2026 (Minggu 1-12)' 
+                : 'Rentang Tanggal Blok B: 25 Mei 2026 s/d 16 Agustus 2026 (Minggu 13-24)'}
+            </div>
+          </div>
+        ` : `
+          <div style="display: flex; justify-content: center; margin-bottom: var(--space-4)">
+            <div class="view-toggle" style="padding: 4px; border-radius: var(--radius-lg)">
+              <button class="view-toggle-btn active" style="padding: var(--space-2) var(--space-4)">Rolling Reguler (Semester Ganjil)</button>
+            </div>
+          </div>
+        `}
+
         <!-- Rolling Button -->
         <div style="margin-bottom: var(--space-4)">
-          <button class="btn btn-primary" id="btnRollingWeek">Rolling Minggu ${this.selectedWeek}</button>
+          <button class="btn btn-primary" id="btnRollingWeek">Rolling Minggu ${this.selectedWeek} (${isGanjil ? 'Reguler' : this.activeBlock})</button>
         </div>
 
         <div id="rollingResults"></div>
@@ -77,6 +112,13 @@ const Rolling = {
     document.getElementById('btnRollingWeek').addEventListener('click', () => {
       this.runWeeklyRolling();
     });
+  },
+
+  setActiveBlock(block) {
+    this.activeBlock = block;
+    this.results = [];
+    const content = document.getElementById('pageContent');
+    if (content) this.render(content);
   },
 
   changeMonth(dir) {
@@ -97,7 +139,7 @@ const Rolling = {
   runWeeklyRolling() {
     const allResults = [];
     DataStore.hari.forEach(hari => {
-      const dayResults = DataStore.rollingRooms(hari);
+      const dayResults = DataStore.rollingRooms(hari, this.activeBlock);
       allResults.push(...dayResults.map(r => ({ ...r, hari })));
     });
     this.results = allResults;
@@ -153,6 +195,8 @@ const Rolling = {
 
   renderRollingCalendar(allResults) {
     const timeSlots = DataStore.getTimeSlots();
+    const activeSemester = DataStore.semester.find(s => s.is_aktif) || DataStore.semester[0];
+    const isGanjil = activeSemester.jenis === 'Ganjil';
 
     const gridData = {};
     timeSlots.forEach(slot => {
@@ -171,7 +215,7 @@ const Rolling = {
 
     return `
       <div style="margin-bottom: var(--space-3); font-size: var(--text-sm); color: var(--color-ink-muted)">
-        Minggu ${this.selectedWeek} - ${DataStore.semester[0].tahun_ajaran} ${DataStore.semester[0].jenis}
+        Minggu ${this.selectedWeek} - ${activeSemester.tahun_ajaran} ${activeSemester.jenis} (${isGanjil ? 'Reguler' : this.activeBlock})
       </div>
       <div class="rolling-calendar">
         <div class="calendar-time-header">Jam</div>

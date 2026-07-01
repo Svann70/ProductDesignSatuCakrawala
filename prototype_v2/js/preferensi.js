@@ -1,33 +1,22 @@
 /* ============================================
-   Preferensi Dosen Page - 45min/SKS with Individual Slots
+   Preferensi Dosen Page - 45min/SKS with Semester Filtering
    ============================================ */
 
 const Preferensi = {
   render(container) {
+    const activeSemester = DataStore.semester.find(s => s.is_aktif) || DataStore.semester[0];
+    const semId = activeSemester.id;
+
     const dosenList = DataStore.dosen.filter(d => d.status === 'Aktif');
     const prefMap = {};
-    DataStore.preferensi.forEach(p => { prefMap[p.dosen_id] = p; });
-
-    const conflicts = DataStore.checkPreferenceConflicts();
+    DataStore.preferensi.filter(p => p.semester_id === semId).forEach(p => { prefMap[p.dosen_id] = p; });
 
     container.innerHTML = `
       <div class="page-content-inner">
-        ${conflicts.length > 0 ? this.renderConflictBanner(conflicts) : ''}
-
-        <div class="card" style="margin-bottom: var(--space-4)">
-          <div class="card-header">
-            <h3>Peta Preferensi Dosen</h3>
-            <span class="badge badge-info">${DataStore.semester[0].tahun_ajaran} ${DataStore.semester[0].jenis}</span>
-          </div>
-          <div class="card-body">
-            ${this.renderPreferenceGrid(prefMap, conflicts)}
-          </div>
-        </div>
-
         <div class="card">
           <div class="card-header">
             <h3>Daftar Dosen</h3>
-            <span style="font-size: var(--text-xs); color: var(--color-ink-subdued)">${prefMap ? Object.keys(prefMap).length : 0}/${dosenList.length} mengisi</span>
+            <span style="font-size: var(--text-xs); color: var(--color-ink-subdued)">${Object.keys(prefMap).length}/${dosenList.length} mengisi</span>
           </div>
           <div style="padding: var(--space-2) var(--space-3)">
             <div style="display: flex; flex-direction: column; gap: 1px; background: var(--color-border-subtle); border-radius: var(--radius-md); overflow: hidden">
@@ -35,18 +24,16 @@ const Preferensi = {
                 const pref = prefMap[d.id];
                 const jur = DataStore.getJurusan(d.jurusan_id);
                 const color = DataStore.getJurusanColor(d.jurusan_id);
-                const isConflict = pref && this.hasDosenConflict(d.id, conflicts);
                 const totalSKS = pref ? pref.details.length : 0;
                 return `
-                  <div style="display: flex; align-items: center; justify-content: space-between; padding: var(--space-2) var(--space-3); background: ${isConflict ? 'var(--color-error-bg)' : 'var(--color-canvas)'}; cursor: pointer" onclick="Preferensi.openEdit(${d.id})">
+                  <div style="display: flex; align-items: center; justify-content: space-between; padding: var(--space-2) var(--space-3); background: var(--color-canvas); cursor: pointer" onclick="Preferensi.openEdit(${d.id})">
                     <div style="display: flex; align-items: center; gap: var(--space-2)">
                       <div style="width: 6px; height: 6px; border-radius: 1px; background: ${color}"></div>
                       <span style="font-size: var(--text-sm); font-weight: var(--weight-medium)">${d.nama.split(',')[0]}</span>
                       <span style="font-size: var(--text-xs); color: var(--color-ink-subdued)">${jur?.kode || ''}</span>
                     </div>
                     <div style="display: flex; align-items: center; gap: var(--space-2)">
-                      ${totalSKS > 0 ? `<span style="font-size: var(--text-xs); color: var(--color-ink-muted)">${totalSKS} SKS</span>` : ''}
-                      ${isConflict ? '<span class="badge badge-error" style="font-size: 10px">Konflik</span>' : ''}
+                      ${totalSKS > 0 ? `<span style="font-size: var(--text-xs); color: var(--color-ink-muted)">${totalSKS} Jam</span>` : ''}
                       ${pref ? '<span class="badge badge-success" style="font-size: 10px">Sudah</span>' : '<span class="badge badge-warning" style="font-size: 10px">Belum</span>'}
                     </div>
                   </div>
@@ -59,105 +46,11 @@ const Preferensi = {
     `;
   },
 
-  hasDosenConflict(dosenId, conflicts) {
-    return conflicts.some(c => c.dosen_ids.includes(dosenId));
-  },
-
-  renderConflictBanner(conflicts) {
-    return `
-      <div class="pref-conflict-banner">
-        <span class="pref-conflict-icon">!</span>
-        <div style="flex: 1">
-          <div class="pref-conflict-title">Konflik Preferensi Terdeteksi (${conflicts.length})</div>
-          <div style="font-size: var(--text-sm); color: var(--color-ink-muted); margin-bottom: var(--space-2)">
-            Dosen berikut menginginkan slot waktu yang sama. Staf akademik perlu menyelesaikan konflik ini.
-          </div>
-          <div class="pref-conflict-list">
-            ${conflicts.map(c => `
-              <div class="pref-conflict-item">
-                <span class="pref-conflict-slot">${c.hari} ${c.jam_mulai}-${c.jam_selesai}</span>
-                <span style="color: var(--color-ink-muted); font-size: var(--text-sm)">diminta oleh:</span>
-                <span class="pref-conflict-dosen">
-                  ${c.dosen_list.map(d => {
-                    const color = DataStore.getJurusanColor(d.jurusan_id);
-                    return `<span class="pref-conflict-badge" style="background: ${color}">${d.nama.split(',')[0]}</span>`;
-                  }).join('')}
-                </span>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      </div>
-    `;
-  },
-
-  renderPreferenceGrid(prefMap, conflicts) {
-    const prefSlots = DataStore.getPreferenceSlots();
-
-    // Build grid data: slot -> day -> [dosen]
-    const gridData = {};
-    prefSlots.forEach(slot => {
-      gridData[slot.label] = {};
-      DataStore.hari.forEach(hari => {
-        gridData[slot.label][hari] = [];
-      });
-    });
-
-    DataStore.preferensi.forEach(p => {
-      const dosen = DataStore.getDosen(p.dosen_id);
-      if (!dosen) return;
-      p.details.forEach(d => {
-        const slotKey = `${d.jam_mulai} - ${d.jam_selesai}`;
-        if (gridData[slotKey] && gridData[slotKey][d.hari]) {
-          gridData[slotKey][d.hari].push(dosen);
-        }
-      });
-    });
-
-    // Build conflict set
-    const conflictSet = new Set();
-    conflicts.forEach(c => {
-      const slotKey = `${c.jam_mulai} - ${c.jam_selesai}`;
-      conflictSet.add(`${slotKey}-${c.hari}`);
-    });
-
-    // Group slots by session (morning/afternoon)
-    const morningSlots = prefSlots.filter(s => s.start < '12:00');
-    const afternoonSlots = prefSlots.filter(s => s.start >= '13:00');
-
-    const renderSlotGroup = (slots, groupLabel) => `
-      <div style="font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--color-ink-muted); padding: var(--space-1) var(--space-2); background: var(--color-surface-2); grid-column: 1 / -1; text-transform: uppercase; letter-spacing: 0.05em">${groupLabel}</div>
-      ${slots.map(slot => `
-        <div class="pref-grid-time">${slot.label}</div>
-        ${DataStore.hari.map(hari => {
-          const dosenList = gridData[slot.label][hari] || [];
-          const cellKey = `${slot.label}-${hari}`;
-          const isConflict = conflictSet.has(cellKey);
-          return `
-            <div class="pref-grid-cell ${isConflict ? 'pref-war-cell' : ''}">
-              ${dosenList.map(d => {
-                const color = DataStore.getJurusanColor(d.jurusan_id);
-                return `<span class="pref-dosen-pill" style="background: ${color}" title="${d.nama}">${d.nama.split(',')[0].split(' ').pop()}</span>`;
-              }).join('')}
-            </div>
-          `;
-        }).join('')}
-      `).join('')}
-    `;
-
-    return `
-      <div class="pref-grid" style="grid-template-columns: 70px repeat(6, 1fr)">
-        <div class="pref-grid-header" style="background: var(--color-surface-1)">Jam</div>
-        ${DataStore.hari.map(h => `<div class="pref-grid-header">${h}</div>`).join('')}
-        ${renderSlotGroup(morningSlots, 'Sesi Pagi')}
-        ${renderSlotGroup(afternoonSlots, 'Sesi Siang')}
-      </div>
-    `;
-  },
-
   openEdit(dosenId) {
     const dosen = DataStore.getDosen(dosenId);
-    const pref = DataStore.preferensi.find(p => p.dosen_id === dosenId);
+    const activeSemester = DataStore.semester.find(s => s.is_aktif) || DataStore.semester[0];
+    const semId = activeSemester.id;
+    const pref = DataStore.preferensi.find(p => p.dosen_id === dosenId && p.semester_id === semId);
     const jur = DataStore.getJurusan(dosen.jurusan_id);
 
     let modal = document.getElementById('prefModal');
@@ -180,35 +73,24 @@ const Preferensi = {
       });
     }
 
-    // Build set of slots taken by OTHER dosen (blocked slots)
-    const blockedSlots = {}; // "hari-start-end" -> dosenName
-    DataStore.preferensi.forEach(p => {
-      if (p.dosen_id === dosenId) return; // skip current dosen
-      const otherDosen = DataStore.getDosen(p.dosen_id);
-      p.details.forEach(d => {
-        const key = `${d.hari}-${d.jam_mulai}-${d.jam_selesai}`;
-        blockedSlots[key] = otherDosen?.nama?.split(',')[0] || 'Dosen lain';
-      });
-    });
-
     const prefSlots = DataStore.getPreferenceSlots();
     const morningSlots = prefSlots.filter(s => s.start < '12:00');
-    const afternoonSlots = prefSlots.filter(s => s.start >= '13:00');
+    const afternoonSlots = prefSlots.filter(s => s.start >= '12:00');
 
     modal.innerHTML = `
       <div class="modal modal-wide">
         <div class="modal-header">
-          <h3>Preferensi Jadwal Mengajar</h3>
+          <h3>Preferensi Jadwal Mengajar (${activeSemester.tahun_ajaran} ${activeSemester.jenis})</h3>
           <button class="modal-close" onclick="App.closeModal('prefModal')">&times;</button>
         </div>
         <div class="modal-body">
           <div style="margin-bottom: var(--space-4)">
             <div style="font-weight: var(--weight-semibold); font-size: var(--text-lg)">${dosen.nama}</div>
-            <div style="font-size: var(--text-sm); color: var(--color-ink-muted)">Jurusan: ${jur?.nama || '-'} | 1 SKS = 45 menit, istirahat 15 menit</div>
+            <div style="font-size: var(--text-sm); color: var(--color-ink-muted)">Jurusan: ${jur?.nama || '-'} | Slot mengajar menggunakan interval per 1 jam</div>
           </div>
           <div style="margin-bottom: var(--space-3)">
             <div style="font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--color-ink); margin-bottom: var(--space-2)">
-              Centang slot waktu yang dikehendaki (per SKS):
+              Centang slot waktu yang dikehendaki:
             </div>
           </div>
 
@@ -227,16 +109,7 @@ const Preferensi = {
                     <td style="padding: var(--space-2) var(--space-3); font-family: var(--font-mono); font-size: var(--text-xs); color: var(--color-ink-muted); border-bottom: 1px solid var(--color-border-subtle)">${slot.label}</td>
                     ${DataStore.hari.map(hari => {
                       const slotKey = `${slot.start}-${slot.end}`;
-                      const blockKey = `${hari}-${slot.start}-${slot.end}`;
                       const isChecked = daySlotData[hari][slotKey] || false;
-                      const isBlocked = blockedSlots[blockKey];
-                      if (isBlocked) {
-                        return `
-                          <td style="padding: var(--space-2); text-align: center; border-bottom: 1px solid var(--color-border-subtle); background: var(--color-error-bg)">
-                            <div style="font-size: 9px; color: var(--color-error); font-weight: var(--weight-medium)" title="${isBlocked}">${isBlocked.split(' ').pop()}</div>
-                          </td>
-                        `;
-                      }
                       return `
                         <td style="padding: var(--space-2); text-align: center; border-bottom: 1px solid var(--color-border-subtle)">
                           <input type="checkbox" class="pref-slot-check" data-hari="${hari}" data-start="${slot.start}" data-end="${slot.end}" ${isChecked ? 'checked' : ''} style="width: 16px; height: 16px; accent-color: var(--color-primary); cursor: pointer">
@@ -251,16 +124,7 @@ const Preferensi = {
                     <td style="padding: var(--space-2) var(--space-3); font-family: var(--font-mono); font-size: var(--text-xs); color: var(--color-ink-muted); border-bottom: 1px solid var(--color-border-subtle)">${slot.label}</td>
                     ${DataStore.hari.map(hari => {
                       const slotKey = `${slot.start}-${slot.end}`;
-                      const blockKey = `${hari}-${slot.start}-${slot.end}`;
                       const isChecked = daySlotData[hari][slotKey] || false;
-                      const isBlocked = blockedSlots[blockKey];
-                      if (isBlocked) {
-                        return `
-                          <td style="padding: var(--space-2); text-align: center; border-bottom: 1px solid var(--color-border-subtle); background: var(--color-error-bg)">
-                            <div style="font-size: 9px; color: var(--color-error); font-weight: var(--weight-medium)" title="${isBlocked}">${isBlocked.split(' ').pop()}</div>
-                          </td>
-                        `;
-                      }
                       return `
                         <td style="padding: var(--space-2); text-align: center; border-bottom: 1px solid var(--color-border-subtle)">
                           <input type="checkbox" class="pref-slot-check" data-hari="${hari}" data-start="${slot.start}" data-end="${slot.end}" ${isChecked ? 'checked' : ''} style="width: 16px; height: 16px; accent-color: var(--color-primary); cursor: pointer">
@@ -281,10 +145,6 @@ const Preferensi = {
             <div style="display: flex; align-items: center; gap: var(--space-1)">
               <div style="width: 12px; height: 12px; border-radius: 2px; background: var(--color-primary-subtle)"></div>
               <span>Dipilih</span>
-            </div>
-            <div style="display: flex; align-items: center; gap: var(--space-1)">
-              <div style="width: 12px; height: 12px; border-radius: 2px; background: var(--color-error-bg)"></div>
-              <span>Sudah diambil dosen lain</span>
             </div>
           </div>
 
@@ -316,7 +176,7 @@ const Preferensi = {
     const summaryEl = document.getElementById('prefSummary');
     const countEl = document.getElementById('prefSKSCount');
 
-    if (countEl) countEl.textContent = `${checked.length} SKS dipilih`;
+    if (countEl) countEl.textContent = `${checked.length} Jam dipilih`;
 
     if (!summaryEl) return;
 
@@ -337,9 +197,9 @@ const Preferensi = {
       <div style="padding: var(--space-2) var(--space-3); background: var(--color-primary-subtle); border-radius: var(--radius-md); font-size: var(--text-sm)">
         <strong>Ringkasan:</strong>
         ${Object.entries(byDay).map(([hari, slots]) =>
-          ` ${hari} (${slots.length} SKS)`
+          ` ${hari} (${slots.length} Jam)`
         ).join(', ')}
-        - Total <strong>${checked.length} SKS</strong> per minggu
+        - Total <strong>${checked.length} Jam</strong> per minggu
       </div>
     `;
   },
@@ -361,8 +221,10 @@ const Preferensi = {
       return;
     }
 
-    const existingIdx = DataStore.preferensi.findIndex(p => p.dosen_id === dosenId);
-    const semId = DataStore.semester[0].id;
+    const activeSemester = DataStore.semester.find(s => s.is_aktif) || DataStore.semester[0];
+    const semId = activeSemester.id;
+
+    const existingIdx = DataStore.preferensi.findIndex(p => p.dosen_id === dosenId && p.semester_id === semId);
     if (existingIdx >= 0) {
       DataStore.preferensi[existingIdx].details = details;
     } else {

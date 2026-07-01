@@ -7,7 +7,26 @@ const App = {
 
   init() {
     this.bindSidebar();
+    this.initSemesterSelector();
     this.navigate('jadwal');
+  },
+
+  initSemesterSelector() {
+    const select = document.getElementById('globalSemesterSelect');
+    if (!select) return;
+    select.innerHTML = DataStore.semester.map(sem => 
+      `<option value="${sem.id}" ${sem.is_aktif ? 'selected' : ''}>${sem.tahun_ajaran} ${sem.jenis}</option>`
+    ).join('');
+
+    select.addEventListener('change', (e) => {
+      const selectedId = parseInt(e.target.value);
+      DataStore.semester.forEach(sem => {
+        sem.is_aktif = (sem.id === selectedId);
+      });
+      // Trigger a page refresh
+      this.navigate(this.currentPage);
+      this.toast(`Semester diubah ke: ${select.options[select.selectedIndex].text}`);
+    });
   },
 
   bindSidebar() {
@@ -31,6 +50,8 @@ const App = {
     // Update header title
     const titles = {
       jadwal: 'Jadwal Kuliah',
+      preferensi: 'Preferensi Dosen',
+      rolling: 'Rolling Ruangan',
       gabungan: 'Kelas Gabungan',
       sinkronisasi: 'Status Sinkronisasi',
       master: 'Master Data',
@@ -44,6 +65,8 @@ const App = {
 
     switch (page) {
       case 'jadwal': Jadwal.render(content); break;
+      case 'preferensi': Preferensi.render(content); break;
+      case 'rolling': Rolling.render(content); break;
       case 'gabungan': Gabungan.render(content); break;
       case 'sinkronisasi': Sinkronisasi.render(content); break;
       case 'master': Master.render(content); break;

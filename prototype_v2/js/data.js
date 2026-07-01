@@ -71,25 +71,25 @@ const DataStore = {
 
   // ---- Mata Kuliah ----
   mataKuliah: [
-    { id: 1, nama: 'Algoritma dan Pemrograman', kode: 'TI101', sks: 3, jurusan_id: 1, semester: 1, jenis_penjadwalan: 'Reguler' },
+    { id: 1, nama: 'Algoritma dan Pemrograman', kode: 'TI101', sks: 3, jurusan_id: 1, semester: 1, jenis_penjadwalan: 'Blok A' },
     { id: 2, nama: 'Basis Data', kode: 'TI201', sks: 3, jurusan_id: 1, semester: 3, jenis_penjadwalan: 'Reguler' },
     { id: 3, nama: 'Pemrograman Web', kode: 'TI202', sks: 3, jurusan_id: 1, semester: 3, jenis_penjadwalan: 'Reguler' },
     { id: 4, nama: 'Jaringan Komputer', kode: 'TI301', sks: 3, jurusan_id: 1, semester: 5, jenis_penjadwalan: 'Reguler' },
     { id: 5, nama: 'Kecerdasan Buatan', kode: 'TI401', sks: 3, jurusan_id: 1, semester: 7, jenis_penjadwalan: 'Reguler' },
     { id: 6, nama: 'Sistem Operasi', kode: 'TI302', sks: 3, jurusan_id: 1, semester: 5, jenis_penjadwalan: 'Reguler' },
     { id: 7, nama: 'Rekayasa Perangkat Lunak', kode: 'TI303', sks: 3, jurusan_id: 1, semester: 5, jenis_penjadwalan: 'Reguler' },
-    { id: 8, nama: 'Statistika', kode: 'SI101', sks: 3, jurusan_id: 2, semester: 1, jenis_penjadwalan: 'Reguler' },
+    { id: 8, nama: 'Statistika', kode: 'SI101', sks: 3, jurusan_id: 2, semester: 1, jenis_penjadwalan: 'Blok A' },
     { id: 9, nama: 'Pemrograman Berorientasi Objek', kode: 'SI201', sks: 3, jurusan_id: 2, semester: 3, jenis_penjadwalan: 'Reguler' },
     { id: 10, nama: 'Analisis dan Desain Sistem', kode: 'SI301', sks: 3, jurusan_id: 2, semester: 5, jenis_penjadwalan: 'Reguler' },
-    { id: 11, nama: 'Kalkulus', kode: 'TE101', sks: 4, jurusan_id: 3, semester: 1, jenis_penjadwalan: 'Reguler' },
+    { id: 11, nama: 'Kalkulus', kode: 'TE101', sks: 4, jurusan_id: 3, semester: 1, jenis_penjadwalan: 'Blok A' },
     { id: 12, nama: 'Rangkaian Listrik', kode: 'TE201', sks: 3, jurusan_id: 3, semester: 3, jenis_penjadwalan: 'Reguler' },
     { id: 13, nama: 'Mekanika Tanah', kode: 'TS201', sks: 3, jurusan_id: 4, semester: 3, jenis_penjadwalan: 'Reguler' },
     { id: 14, nama: 'Manajemen Keuangan', kode: 'MJ201', sks: 3, jurusan_id: 5, semester: 3, jenis_penjadwalan: 'Reguler' },
-    { id: 15, nama: 'Akuntansi Dasar', kode: 'AK101', sks: 3, jurusan_id: 6, semester: 1, jenis_penjadwalan: 'Reguler' },
+    { id: 15, nama: 'Akuntansi Dasar', kode: 'AK101', sks: 3, jurusan_id: 6, semester: 1, jenis_penjadwalan: 'Blok B' },
     { id: 16, nama: 'Komunikasi Massa', kode: 'IK201', sks: 3, jurusan_id: 7, semester: 3, jenis_penjadwalan: 'Reguler' },
-    { id: 17, nama: 'Psikologi Umum', kode: 'PS101', sks: 3, jurusan_id: 8, semester: 1, jenis_penjadwalan: 'Reguler' },
+    { id: 17, nama: 'Psikologi Umum', kode: 'PS101', sks: 3, jurusan_id: 8, semester: 1, jenis_penjadwalan: 'Blok B' },
     { id: 18, nama: 'Hukum Perdata', kode: 'HK201', sks: 3, jurusan_id: 9, semester: 3, jenis_penjadwalan: 'Reguler' },
-    { id: 19, nama: 'Anatomi', kode: 'KD101', sks: 4, jurusan_id: 10, semester: 1, jenis_penjadwalan: 'Reguler' },
+    { id: 19, nama: 'Anatomi', kode: 'KD101', sks: 4, jurusan_id: 10, semester: 1, jenis_penjadwalan: 'Blok B' },
     
     // Semester 2 (Sistem Blok)
     { id: 21, nama: 'Struktur Data (Blok A)', kode: 'TI211', sks: 3, jurusan_id: 1, semester: 2, jenis_penjadwalan: 'Blok A' },
@@ -117,6 +117,20 @@ const DataStore = {
 
   // ---- Jadwal Kuliah ----
   jadwal: [
+    // ============= SEMESTER 1 (Ganjil - Reguler) =============
+    { id: 401, mata_kuliah_id: 1, kelas: 'A', dosen_id: 1, ruangan_id: 1, hari: 'Senin', jam_mulai: '08:00', jam_selesai: '10:00', jurusan_id: 1, semester: 1, status: 'Aktif', is_gabungan: false },
+    { id: 402, mata_kuliah_id: 1, kelas: 'B', dosen_id: 1, ruangan_id: 2, hari: 'Senin', jam_mulai: '10:00', jam_selesai: '12:00', jurusan_id: 1, semester: 1, status: 'Aktif', is_gabungan: false },
+    { id: 403, mata_kuliah_id: 8, kelas: 'A', dosen_id: 4, ruangan_id: 3, hari: 'Selasa', jam_mulai: '08:00', jam_selesai: '10:00', jurusan_id: 2, semester: 1, status: 'Aktif', is_gabungan: false },
+    { id: 404, mata_kuliah_id: 15, kelas: 'A', dosen_id: 10, ruangan_id: 4, hari: 'Rabu', jam_mulai: '08:00', jam_selesai: '10:00', jurusan_id: 6, semester: 1, status: 'Aktif', is_gabungan: false },
+    { id: 405, mata_kuliah_id: 17, kelas: 'A', dosen_id: 12, ruangan_id: 5, hari: 'Kamis', jam_mulai: '08:00', jam_selesai: '10:00', jurusan_id: 8, semester: 1, status: 'Aktif', is_gabungan: false },
+    { id: 406, mata_kuliah_id: 19, kelas: 'A', dosen_id: 14, ruangan_id: 6, hari: 'Jumat', jam_mulai: '08:00', jam_selesai: '11:00', jurusan_id: 10, semester: 1, status: 'Aktif', is_gabungan: false },
+
+    // ============= SEMESTER 3 (Ganjil - Reguler) =============
+    { id: 501, mata_kuliah_id: 2, kelas: 'A', dosen_id: 2, ruangan_id: 1, hari: 'Selasa', jam_mulai: '10:00', jam_selesai: '12:00', jurusan_id: 1, semester: 3, status: 'Aktif', is_gabungan: false },
+    { id: 502, mata_kuliah_id: 3, kelas: 'A', dosen_id: 3, ruangan_id: 2, hari: 'Rabu', jam_mulai: '10:00', jam_selesai: '12:00', jurusan_id: 1, semester: 3, status: 'Aktif', is_gabungan: false },
+    { id: 503, mata_kuliah_id: 9, kelas: 'A', dosen_id: 5, ruangan_id: 3, hari: 'Kamis', jam_mulai: '10:00', jam_selesai: '12:00', jurusan_id: 2, semester: 3, status: 'Aktif', is_gabungan: false },
+    { id: 504, mata_kuliah_id: 12, kelas: 'A', dosen_id: 6, ruangan_id: 4, hari: 'Jumat', jam_mulai: '10:00', jam_selesai: '12:00', jurusan_id: 3, semester: 3, status: 'Aktif', is_gabungan: false },
+
     // ============= SEMESTER 4 (Sistem Reguler) =============
     // Senin
     { id: 101, mata_kuliah_id: 27, kelas: 'A', dosen_id: 1, ruangan_id: 2, hari: 'Senin', jam_mulai: '08:00', jam_selesai: '10:00', jurusan_id: 1, semester: 4, status: 'Aktif', is_gabungan: false },
@@ -513,18 +527,9 @@ const DataStore = {
     ];
   },
 
-  // Generate individual SKS slots for preference input (1 SKS = 45 min, 15 min break)
+  // SKS slots aligned with calendar time slots (07:00 to 22:00)
   getPreferenceSlots() {
-    return [
-      { label: '08:00 - 08:45', start: '08:00', end: '08:45', sks: 1 },
-      { label: '09:00 - 09:45', start: '09:00', end: '09:45', sks: 1 },
-      { label: '10:00 - 10:45', start: '10:00', end: '10:45', sks: 1 },
-      { label: '11:00 - 11:45', start: '11:00', end: '11:45', sks: 1 },
-      { label: '13:00 - 13:45', start: '13:00', end: '13:45', sks: 1 },
-      { label: '14:00 - 14:45', start: '14:00', end: '14:45', sks: 1 },
-      { label: '15:00 - 15:45', start: '15:00', end: '15:45', sks: 1 },
-      { label: '16:00 - 16:45', start: '16:00', end: '16:45', sks: 1 },
-    ];
+    return this.getTimeSlots();
   },
 
   // Get jadwal for a specific day and time slot (with overlap checking so multi-hour events span multiple cells)
@@ -539,14 +544,36 @@ const DataStore = {
     return this.jadwal.filter(j => j.hari === day).map(j => this.getJadwalDetail(j));
   },
 
-  // Rolling room assignment for a day
-  rollingRooms(hari) {
+  // Rolling room assignment for a day, filtered by block type if applicable
+  rollingRooms(hari, activeBlock) {
     const results = [];
-    const dayJadwal = this.jadwal.filter(j => j.hari === hari);
+    const activeSemester = this.semester.find(s => s.is_aktif) || this.semester[0];
+    const isGanjil = activeSemester.jenis === 'Ganjil';
+
+    const dayJadwal = this.jadwal.filter(j => {
+      if (j.hari !== hari) return false;
+      
+      // Filter by semester type (odd vs even)
+      if (isGanjil) {
+        if (j.semester % 2 !== 1) return false;
+      } else {
+        if (j.semester % 2 !== 0) return false;
+
+        // Filter by block if activeBlock is provided (e.g. 'Blok A' or 'Blok B')
+        if (activeBlock === 'Blok A' || activeBlock === 'Blok B') {
+          const mk = this.getMataKuliah(j.mata_kuliah_id);
+          const type = mk?.jenis_penjadwalan || 'Reguler';
+          // Reguler classes run all semester, so they occupy rooms in both Blok A and Blok B periods
+          return type === activeBlock || type === 'Reguler';
+        }
+      }
+      return true;
+    });
+
     const usedSlots = new Map(); // ruangan_id -> [{jam_mulai, jam_selesai}]
 
     for (const j of dayJadwal) {
-      const preferred = this.preferensi.find(p => p.dosen_id === j.dosen_id);
+      const preferred = this.preferensi.find(p => p.dosen_id === j.dosen_id && p.semester_id === activeSemester.id);
       const prefInfo = preferred ? preferred.details.filter(d => d.hari === hari) : [];
 
       let assigned = j.ruangan_id;
@@ -557,8 +584,8 @@ const DataStore = {
       const conflict = slots.some(s => j.jam_mulai < s.jam_selesai && j.jam_selesai > s.jam_mulai);
 
       if (conflict) {
-        // Find next available room
-        const available = this.getAvailableRooms(hari, j.jam_mulai, j.jam_selesai);
+        // Find next available room (within the filtered dayJadwal)
+        const available = this.getAvailableRooms(hari, j.jam_mulai, j.jam_selesai, j.id, dayJadwal, j.mata_kuliah_id);
         const free = available.find(r => {
           const rSlots = usedSlots.get(r.id) || [];
           return !rSlots.some(s => j.jam_mulai < s.jam_selesai && j.jam_selesai > s.jam_mulai);
@@ -591,12 +618,27 @@ const DataStore = {
   },
 
   // Auto-schedule generator for a specific semester
-  generateSemesterSchedule(semesterNum) {
+  generateSemesterSchedule(semesterNum, blockPeriod) {
     // 1. Clear existing schedules for this semester
-    this.jadwal = this.jadwal.filter(j => j.semester !== semesterNum);
+    if (blockPeriod) {
+      this.jadwal = this.jadwal.filter(j => {
+        if (j.semester !== semesterNum) return true;
+        const mk = this.getMataKuliah(j.mata_kuliah_id);
+        const type = mk?.jenis_penjadwalan || 'Reguler';
+        return type !== blockPeriod && type !== 'Reguler';
+      });
+    } else {
+      this.jadwal = this.jadwal.filter(j => j.semester !== semesterNum);
+    }
 
     // 2. Identify courses in this semester
-    const courses = this.mataKuliah.filter(m => m.semester === semesterNum);
+    const courses = this.mataKuliah.filter(m => {
+      if (m.semester !== semesterNum) return false;
+      if (blockPeriod) {
+        return m.jenis_penjadwalan === blockPeriod || m.jenis_penjadwalan === 'Reguler';
+      }
+      return true;
+    });
 
     // 3. For each course, define classes to schedule (e.g. 'A' and 'B')
     const classes = ['A', 'B'];
@@ -706,5 +748,63 @@ const DataStore = {
     // Commit generated schedule to this.jadwal
     this.jadwal = tempJadwal;
     return successCount;
+  },
+
+  semesterConfig: {
+    tanggal_mulai: '2026-03-02',
+    weeks_per_block: 12,
+  },
+
+  getBlockRanges() {
+    const start = new Date(this.semesterConfig.tanggal_mulai);
+    const weeks = this.semesterConfig.weeks_per_block;
+    
+    // Blok A: weeks 1 to 12
+    const endA = new Date(start);
+    endA.setDate(start.getDate() + (weeks * 7) - 1);
+    
+    // Blok B: weeks 13 to 24
+    const startB = new Date(endA);
+    startB.setDate(endA.getDate() + 1);
+    const endB = new Date(startB);
+    endB.setDate(startB.getDate() + (weeks * 7) - 1);
+    
+    const formatDate = (d) => {
+      const options = { day: 'numeric', month: 'long', year: 'numeric' };
+      return d.toLocaleDateString('id-ID', options);
+    };
+    
+    return {
+      blokA: {
+        start: start,
+        end: endA,
+        formatted: `${formatDate(start)} s/d ${formatDate(endA)}`
+      },
+      blokB: {
+        start: startB,
+        end: endB,
+        formatted: `${formatDate(startB)} s/d ${formatDate(endB)}`
+      }
+    };
+  },
+
+  commitRollingResults(results) {
+    results.forEach(r => {
+      const j = this.jadwal.find(item => item.id === r.jadwal.id);
+      if (j && r.ruangan) {
+        j.ruangan_id = r.ruangan.id;
+        
+        // Add audit log for change
+        this.auditLog.push({
+          id: this.auditLog.length + 1,
+          entitas: 'Jadwal Kuliah',
+          entitas_id: j.id,
+          aksi: 'Update',
+          perubahan: { field: 'ruangan_id', nilai_lama: null, nilai_baru: r.ruangan.nama },
+          user: 'Staff Akademik',
+          timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
+        });
+      }
+    });
   },
 };
