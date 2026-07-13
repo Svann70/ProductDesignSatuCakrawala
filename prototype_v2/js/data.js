@@ -290,7 +290,24 @@ const DataStore = {
   },
 
   // ---- Kelas Gabungan (Grouping) ----
-  kelasGabungan: [],
+  kelasGabungan: [
+    {
+      id: 1,
+      nama: 'Bisdig A',
+      jadwal_induk_id: 401,
+      dosen_id: 1,
+      total_mahasiswa: 5,
+      student_ids: [1, 2, 4, 5, 21]
+    },
+    {
+      id: 2,
+      nama: 'Sains Data Gabungan',
+      jadwal_induk_id: 501,
+      dosen_id: 2,
+      total_mahasiswa: 6,
+      student_ids: [1, 2, 3, 21, 22, 23]
+    }
+  ],
 
   // ---- Audit Log ----
   auditLog: [
@@ -807,4 +824,56 @@ const DataStore = {
       }
     });
   },
+
+  fakultas: [
+    { id: 1, nama: 'Fakultas Teknologi Informasi' },
+    { id: 2, nama: 'Fakultas Ekonomi dan Bisnis' },
+    { id: 3, nama: 'Fakultas Bisnis Digital' }
+  ],
+
+  kelasMahasiswa: [
+    { id: 1, nama: 'Bisdig A', jurusan_id: 6, student_ids: [1, 2, 3] },
+    { id: 2, nama: 'Bisdig B', jurusan_id: 6, student_ids: [4, 5] },
+    { id: 3, nama: 'TI-A', jurusan_id: 1, student_ids: [6, 7] },
+    { id: 4, nama: 'TI-B', jurusan_id: 1, student_ids: [8, 9] }
+  ],
+
+  getKelasMahasiswa(jurusanId) {
+    return this.kelasMahasiswa.filter(k => k.jurusan_id === jurusanId);
+  }
 };
+
+// ---- Dynamic Schema & Mock Data Initialization ----
+// 1. Initialize is_gabungan for initial jadwal based on mock groups
+DataStore.kelasGabungan.forEach(kg => {
+  const j = DataStore.jadwal.find(item => item.id === kg.jadwal_induk_id);
+  if (j) j.is_gabungan = true;
+});
+
+// 2. Initialize qualified courses (mata_kuliah_ids) for each lecturer
+DataStore.dosen.forEach(d => {
+  if (!d.mata_kuliah_ids) {
+    // Determine which courses they are currently scheduled to teach
+    const courseIds = new Set(DataStore.jadwal.filter(j => j.dosen_id === d.id).map(j => j.mata_kuliah_id));
+    
+    // Add extra courses from their same department so they have options
+    DataStore.mataKuliah.filter(mk => mk.jurusan_id === d.jurusan_id).slice(0, 4).forEach(mk => courseIds.add(mk.id));
+    
+    // Convert to array
+    d.mata_kuliah_ids = Array.from(courseIds);
+  }
+});
+
+// 3. Initialize mata_kuliah_id for mock preference details
+DataStore.preferensi.forEach(pref => {
+  const d = DataStore.getDosen(pref.dosen_id);
+  if (d && d.mata_kuliah_ids && d.mata_kuliah_ids.length > 0) {
+    pref.details.forEach((det, idx) => {
+      if (!det.mata_kuliah_id) {
+        // Assign one of their qualified course IDs
+        const mkIdx = idx % d.mata_kuliah_ids.length;
+        det.mata_kuliah_id = d.mata_kuliah_ids[mkIdx];
+      }
+    });
+  }
+});

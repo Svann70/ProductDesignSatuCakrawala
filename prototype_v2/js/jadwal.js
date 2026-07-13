@@ -715,7 +715,8 @@ const Jadwal = {
             <div class="form-group">
               <label class="form-label">Kelas <span class="required">*</span></label>
               <select class="form-select" id="formKelas">
-                ${'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(k => `<option value="${k}" ${jadwal?.kelas === k ? 'selected' : ''}>${k}</option>`).join('')}
+                <option value="">Pilih Kelas</option>
+                ${DataStore.kelasMahasiswa.map(k => `<option value="${k.nama}" ${jadwal?.kelas === k.nama ? 'selected' : ''}>${k.nama} (${DataStore.getJurusan(k.jurusan_id)?.kode || 'Kustom'})</option>`).join('')}
               </select>
             </div>
           </div>
@@ -862,7 +863,13 @@ const Jadwal = {
       // Populate Dosen dropdown
       const dosenSelect = document.getElementById('formDosen');
       dosenSelect.innerHTML = '<option value="">Pilih Dosen</option>';
-      DataStore.dosen.filter(d => d.status === 'Aktif').forEach(d => {
+      
+      let qualifiedDosen = DataStore.dosen.filter(d => d.status === 'Aktif');
+      if (currentMkId) {
+        qualifiedDosen = qualifiedDosen.filter(d => (d.mata_kuliah_ids || []).includes(currentMkId));
+      }
+
+      qualifiedDosen.forEach(d => {
         const conflicts = DataStore.checkConflict({
           hari, jam_mulai: jamMulai, jam_selesai: jamSelesai, dosen_id: d.id, ruangan_id: 999999, mata_kuliah_id: currentMkId
         }, this.editingId, activeList);
@@ -875,6 +882,17 @@ const Jadwal = {
           dosenSelect.appendChild(opt);
         }
       });
+
+      // Show alert if no lecturer is configured for the course
+      const warningDisplay = document.getElementById('dosenStatusDisplay');
+      if (currentMkId && qualifiedDosen.length === 0 && warningDisplay) {
+        warningDisplay.innerHTML = `
+          <div class="alert alert-warning" style="font-size: var(--text-xs); padding: var(--space-1) var(--space-2); margin-top: 4px; border: 1px dashed var(--color-warning);">
+            <strong>Peringatan:</strong> Belum ada dosen yang dikelompokkan untuk mengajar mata kuliah ini.
+            Silakan atur di <a href="#" onclick="App.closeModal('jadwalModal'); App.navigate('master'); return false;" style="text-decoration: underline; font-weight: var(--weight-bold); color: var(--color-ink);">Master Data -> Dosen</a>.
+          </div>
+        `;
+      }
 
       // Populate Ruangan dropdown
       const ruanganSelect = document.getElementById('formRuangan');
